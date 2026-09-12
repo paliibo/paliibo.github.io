@@ -1,0 +1,69 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+
+      # Custom domain (repo variable SITE_URL) and user sites (owner.github.io) live at the root;
+      # any other repo name is a project site served under /<repo>.
+      - name: Resolve site URL and base path
+        id: site
+        env:
+          CUSTOM_URL: ${{ vars.SITE_URL }}
+          REPO: ${{ github.event.repository.name }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          owner="$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          if [ -n "$CUSTOM_URL" ]; then
+            url="${CUSTOM_URL%/}"; base=""
+          elif [ "$REPO" = "$owner.github.io" ]; then
+            url="https://$owner.github.io"; base=""
+          else
+            url="https://$owner.github.io/$REPO"; base="/$REPO"
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "Building for $url (base path: '${base:-/}')"
+
+      - run: pnpm build
+        env:
+          NEXT_PUBLIC_SITE_URL: ${{ steps.site.outputs.url }}
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.site.outputs.base }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
