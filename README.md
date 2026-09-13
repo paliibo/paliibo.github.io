@@ -31,6 +31,8 @@ The CV served by the "Download CV" buttons is `public/Bohdan_Palii_CV.pdf`; the 
 
 For a custom domain: add it under *Settings → Pages → Custom domain* (GitHub manages the certificate), then set the repository variable `SITE_URL=https://your-domain.com` so Open Graph, `robots.txt` and `sitemap.xml` point at it.
 
+**Search engines.** The site is *not indexable by default*: every build ships `<meta name="robots" content="noindex, nofollow">`, an empty sitemap and no sitemap line in `robots.txt` (crawling itself stays allowed so robots can read the tag). To go public in search, set the repository variable `INDEXABLE=1` (or `NEXT_PUBLIC_INDEXABLE=1` for any other host) and redeploy.
+
 **Anywhere else.** `pnpm build` writes the site to `out/`; upload that folder (Vercel and Netlify detect the Next.js static export automatically). Set `NEXT_PUBLIC_SITE_URL` at build time.
 
 ## Structure

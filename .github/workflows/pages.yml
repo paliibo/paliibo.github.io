@@ -36,6 +36,7 @@ jobs:
           CUSTOM_URL: ${{ vars.SITE_URL }}
           REPO: ${{ github.event.repository.name }}
           OWNER: ${{ github.repository_owner }}
+          INDEXABLE: ${{ vars.INDEXABLE }}
         run: |
           owner="$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
           if [ -n "$CUSTOM_URL" ]; then
@@ -47,12 +48,13 @@ jobs:
           fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "base=$base" >> "$GITHUB_OUTPUT"
-          echo "Building for $url (base path: '${base:-/}')"
+          echo "Building for $url (base path: '${base:-/}', search indexing: ${INDEXABLE:-off})"
 
       - run: pnpm build
         env:
           NEXT_PUBLIC_SITE_URL: ${{ steps.site.outputs.url }}
           NEXT_PUBLIC_BASE_PATH: ${{ steps.site.outputs.base }}
+          NEXT_PUBLIC_INDEXABLE: ${{ vars.INDEXABLE }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

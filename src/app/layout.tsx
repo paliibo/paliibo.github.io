@@ -24,6 +24,10 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
+// Search indexing is opt-in: the site ships <meta name="robots" content="noindex, nofollow"> unless the
+// build sets NEXT_PUBLIC_INDEXABLE=1 (the Pages workflow maps the repo variable INDEXABLE to it).
+export const indexable = ["1", "true"].includes(process.env.NEXT_PUBLIC_INDEXABLE ?? "");
+
 const title = `${site.name} — ${site.role}`;
 const description = `${site.role} with ${site.years} years of experience building production SaaS for healthcare, fintech, logistics and education teams across the UK, EU and US. TypeScript across the stack: NestJS, React, Next.js, React Native and PostgreSQL.`;
 
@@ -54,7 +58,9 @@ export const metadata: Metadata = {
     description,
   },
   twitter: { card: "summary_large_image", title, description },
-  robots: { index: true, follow: true },
+  robots: indexable
+    ? { index: true, follow: true }
+    : { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };
 
 export const viewport: Viewport = {
