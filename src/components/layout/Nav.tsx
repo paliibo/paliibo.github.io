@@ -16,7 +16,16 @@ const links = [
   { href: "#contact", label: "Contact" },
 ];
 
-export function Nav() {
+// Used by the contact-free page (/upwork), which has no #contact section.
+const linksWithoutContact = links.filter((l) => l.href !== "#contact");
+
+type NavProps = {
+  /** Show the Contact link, CV download and email button. Off on the contact-free /upwork page. */
+  showContact?: boolean;
+};
+
+export function Nav({ showContact = true }: NavProps) {
+  const items = showContact ? links : linksWithoutContact;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
@@ -27,7 +36,7 @@ export function Nav() {
 
   // Section spy: whichever section crosses the middle of the viewport is "active".
   useEffect(() => {
-    const sections = links
+    const sections = items
       .map((l) => document.getElementById(l.href.slice(1)))
       .filter((el): el is HTMLElement => el !== null);
     const io = new IntersectionObserver(
@@ -38,7 +47,7 @@ export function Nav() {
     );
     sections.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, []);
+  }, [items]);
 
   // Lock the page while the mobile menu is open.
   useEffect(() => {
@@ -65,7 +74,7 @@ export function Nav() {
           </a>
 
           <ul className="hidden items-center md:flex">
-            {links.map((l) => {
+            {items.map((l) => {
               const isActive = active === l.href.slice(1);
               return (
                 <li key={l.href}>
@@ -83,9 +92,11 @@ export function Nav() {
             })}
           </ul>
 
-          <a href={site.cvPath} download className="btn btn-primary ml-1 hidden !px-4 !py-2 text-xs md:inline-flex">
-            <Download className="size-3.5" /> CV
-          </a>
+          {showContact && (
+            <a href={site.cvPath} download className="btn btn-primary ml-1 hidden !px-4 !py-2 text-xs md:inline-flex">
+              <Download className="size-3.5" /> CV
+            </a>
+          )}
           <ThemeToggle />
           <button
             type="button"
@@ -109,7 +120,7 @@ export function Nav() {
             className="fixed inset-0 z-30 flex flex-col justify-center bg-canvas px-8 md:hidden"
           >
             <ul className="space-y-2">
-              {links.map((l, i) => (
+              {items.map((l, i) => (
                 <motion.li
                   key={l.href}
                   initial={{ opacity: 0, y: 18 }}
@@ -123,14 +134,16 @@ export function Nav() {
                 </motion.li>
               ))}
             </ul>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-10 flex flex-wrap gap-3">
-              <a href={site.cvPath} download className="btn btn-primary">
-                <Download className="size-4" /> Download CV
-              </a>
-              <a href={`mailto:${site.email}`} className="btn btn-ghost">
-                Email me
-              </a>
-            </motion.div>
+            {showContact && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-10 flex flex-wrap gap-3">
+                <a href={site.cvPath} download className="btn btn-primary">
+                  <Download className="size-4" /> Download CV
+                </a>
+                <a href={`mailto:${site.email}`} className="btn btn-ghost">
+                  Email me
+                </a>
+              </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

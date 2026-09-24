@@ -15,7 +15,12 @@ import { SystemDiagram } from "./SystemDiagram";
 // visible and moving as soon as the HTML paints, before React hydrates.
 const delay = (s: number): CSSProperties => ({ animationDelay: `${s}s` });
 
-export function Hero() {
+type HeroProps = {
+  /** Show the CV download and the LinkedIn/email links. Off on the contact-free /upwork page. */
+  showContact?: boolean;
+};
+
+export function Hero({ showContact = true }: HeroProps) {
   const reduce = useReducedMotion();
   const [phrase, setPhrase] = useState(0);
 
@@ -78,21 +83,27 @@ export function Hero() {
                 See selected work <ArrowDown className="size-4" />
               </a>
             </Magnetic>
-            <Magnetic>
-              <a href={site.cvPath} download className="btn btn-ghost">
-                <Download className="size-4" /> Download CV
-              </a>
-            </Magnetic>
+            {showContact && (
+              <Magnetic>
+                <a href={site.cvPath} download className="btn btn-ghost">
+                  <Download className="size-4" /> Download CV
+                </a>
+              </Magnetic>
+            )}
             <div className="flex items-center gap-2 sm:ml-2">
               <IconLink href={site.github} label="GitHub">
                 <GitHubIcon />
               </IconLink>
-              <IconLink href={site.linkedin} label="LinkedIn">
-                <LinkedInIcon />
-              </IconLink>
-              <IconLink href={`mailto:${site.email}`} label="Email">
-                <Mail className="size-[18px]" />
-              </IconLink>
+              {showContact && (
+                <>
+                  <IconLink href={site.linkedin} label="LinkedIn">
+                    <LinkedInIcon />
+                  </IconLink>
+                  <IconLink href={`mailto:${site.email}`} label="Email">
+                    <Mail className="size-[18px]" />
+                  </IconLink>
+                </>
+              )}
             </div>
           </div>
         </div>
