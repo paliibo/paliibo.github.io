@@ -55,6 +55,8 @@ jobs:
           NEXT_PUBLIC_SITE_URL: ${{ steps.site.outputs.url }}
           NEXT_PUBLIC_BASE_PATH: ${{ steps.site.outputs.base }}
           NEXT_PUBLIC_INDEXABLE: ${{ vars.INDEXABLE }}
+          # Content variant (src/data/variant.ts), e.g. the repo variable VARIANT=healthcare.
+          NEXT_PUBLIC_VARIANT: ${{ vars.VARIANT }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:healthcare": "NEXT_PUBLIC_VARIANT=healthcare next dev",
     "build": "next build",
+    "build:healthcare": "NEXT_PUBLIC_VARIANT=healthcare next build",
     "start": "npx serve out",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

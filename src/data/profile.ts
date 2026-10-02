@@ -4,17 +4,23 @@
  * every project bullet is the CV wording.
  */
 
+import { overrides as variant } from "@/data/variants/active";
+
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH?.replace(/\/$/, "") ?? "";
 
 /** Prefixes a file from public/ with the deploy base path (needed for GitHub Pages project sites). */
 export const asset = (path: string) => `${basePath}${path}`;
 
-export const site = {
+const baseSite = {
   name: "Bohdan Palii",
   firstName: "Bohdan",
   lastName: "Palii",
   role: "Full-Stack Engineer",
   headline: "TypeScript, Node.js (NestJS), React, Next.js, React Native, PostgreSQL",
+  /** Hero sentence after "<role> with <years> years of". */
+  intro: "shipping production SaaS for healthcare, fintech, logistics and education teams across the UK, EU and US",
+  /** Optional personal note under the hero intro; set only by variants. */
+  note: null,
   years: 5,
   email: "contact.palii.bohdan@gmail.com",
   location: "Alicante, Spain",
@@ -35,7 +41,7 @@ export const site = {
   ],
 } as const;
 
-export const heroPhrases = [
+const baseHeroPhrases = [
   "multi-tenant SaaS platforms",
   "async pipelines on BullMQ and Pub/Sub",
   "React Native apps that reach the stores",
@@ -43,7 +49,7 @@ export const heroPhrases = [
   "payment and EHR integrations",
 ];
 
-export const stats = [
+const baseStats = [
   { value: 5, suffix: "", label: "years of experience" },
   { value: 12, suffix: "", label: "production projects" },
   { value: 9, suffix: "", label: "countries served" },
@@ -59,7 +65,7 @@ export interface ExpertiseArea {
   tags: string[];
 }
 
-export const expertise: ExpertiseArea[] = [
+const baseExpertise: ExpertiseArea[] = [
   {
     icon: "server",
     title: "Backend & architecture",
@@ -124,7 +130,7 @@ export interface Project {
   featured?: boolean;
 }
 
-export const projects: Project[] = [
+const baseProjects: Project[] = [
   {
     id: "motics",
     name: "Motics",
@@ -368,7 +374,7 @@ export interface Job {
   location: string;
 }
 
-export const jobs: Job[] = [
+const baseJobs: Job[] = [
   { company: "UAPP LLC", role: "Full-Stack Developer", start: "Sep 2025", end: "Present", location: "Remote · Wilmington, Delaware, USA" },
   { company: "CubeX", role: "Full-Stack Developer", start: "Jul 2024", end: "Sep 2025", location: "Remote · Zaporizhzhia, Ukraine" },
   { company: "ACCA", role: "Full-Stack Developer", start: "Oct 2023", end: "Jul 2024", location: "Hybrid · Fairfax, Virginia, USA" },
@@ -385,7 +391,7 @@ export interface SkillGroup {
   keywords: string[];
 }
 
-export const skills: SkillGroup[] = [
+const baseSkills: SkillGroup[] = [
   { category: "Languages", keywords: ["TypeScript", "JavaScript (ES6+)", "HTML5 / CSS3", "SQL", "Python (FastAPI)", "PHP"] },
   {
     category: "Frontend",
@@ -463,3 +469,44 @@ export const marqueeSecondary = [
   "Expo", "TypeORM", "Drizzle", "Prisma", "RabbitMQ", "Pub/Sub", "Cloud Run", "Kubernetes",
   "Playwright", "Vitest", "Tailwind CSS", "Socket.IO", "Elasticsearch", "Sentry", "Vercel AI SDK",
 ];
+
+// ---------------------------------------------------------------------------
+// Variants (src/data/variant.ts). The content above is the standard portfolio; the active variant's
+// overrides (src/data/variants/<variant>.ts) are layered on top. Components only see these exports.
+// ---------------------------------------------------------------------------
+
+/** Sorts by position in `order`; items not in `order` keep their original relative order after them. */
+function byOrder<T>(list: T[], key: (item: T) => string, order: readonly string[] = []): T[] {
+  const rank = (item: T) => {
+    const i = order.indexOf(key(item));
+    return i === -1 ? order.length : i;
+  };
+  return [...list].sort((a, b) => rank(a) - rank(b));
+}
+
+export const site = {
+  ...baseSite,
+  ...variant.site,
+  ...(variant.cvFile ? { cvPath: asset(variant.cvFile) } : {}),
+};
+
+export const heroPhrases: string[] = variant.heroPhrases ?? baseHeroPhrases;
+
+export const expertise: ExpertiseArea[] = byOrder(baseExpertise, (a) => a.icon, variant.expertiseOrder).map((a) => ({
+  ...a,
+  ...variant.expertise?.[a.icon],
+}));
+
+export const projects: Project[] = byOrder(baseProjects, (p) => p.id, variant.projectOrder).map((p) => ({
+  ...p,
+  ...variant.projects?.[p.id],
+}));
+
+export const skills: SkillGroup[] = baseSkills.map((g) => {
+  const extra = (variant.extraSkills?.[g.category] ?? []).filter((k) => !g.keywords.includes(k));
+  return extra.length ? { ...g, keywords: [...g.keywords, ...extra] } : g;
+});
+
+export const stats = baseStats.map((s) => (s.label === "years of experience" ? { ...s, value: site.years } : s));
+
+export const jobs: Job[] = variant.jobs ?? baseJobs;

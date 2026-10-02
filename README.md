@@ -19,6 +19,18 @@ Everything on the page comes from [`src/data/profile.ts`](src/data/profile.ts): 
 The CV served by the "Download CV" buttons is `public/Bohdan_Palii_CV.pdf`; the portrait is `public/bohdan-palii.png`.
 
 
+## Variants
+
+The same site can build as a content variant, chosen at build time in [`src/data/variant.ts`](src/data/variant.ts). Only the chosen variant is bundled.
+
+| Variant | Content |
+|---|---|
+| `default` | the standard portfolio |
+| `healthcare` | healthcare-focused copy and ordering, and its own CV (`public/Bohdan_Palii_CV_Healthcare.pdf`), from [`src/data/variants/healthcare.ts`](src/data/variants/healthcare.ts) |
+
+- Locally: `pnpm dev:healthcare` or `pnpm build:healthcare`.
+- Deployed: set the repository variable `VARIANT=healthcare` (*Settings → Secrets and variables → Actions → Variables*) and re-run the Pages workflow. Delete it to switch back.
+
 ## Deploy
 
 **GitHub Pages (default).** Every push to `main` runs [`.github/workflows/pages.yml`](.github/workflows/pages.yml): lint, typecheck, `next build`, then `actions/deploy-pages`. One-time setup: *Settings → Pages → Source: GitHub Actions*. The workflow works out the URL by itself:

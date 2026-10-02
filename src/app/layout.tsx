@@ -29,7 +29,7 @@ const jetbrains = JetBrains_Mono({
 export const indexable = ["1", "true"].includes(process.env.NEXT_PUBLIC_INDEXABLE ?? "");
 
 const title = `${site.name} — ${site.role}`;
-const description = `${site.role} with ${site.years} years of experience building production SaaS for healthcare, fintech, logistics and education teams across the UK, EU and US. TypeScript across the stack: NestJS, React, Next.js, React Native and PostgreSQL.`;
+const description = `${site.role} with ${site.years} years of ${site.intro}. TypeScript across the stack: NestJS, React, Next.js, React Native and PostgreSQL.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),

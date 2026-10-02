@@ -56,7 +56,7 @@ export function Hero({ showContact = true }: HeroProps) {
           </h1>
 
           <p className="anim-fade-up mt-8 max-w-xl text-lg leading-relaxed text-ink-2 sm:text-xl" style={delay(0.45)}>
-            {site.role} with {site.years} years of shipping production SaaS for healthcare, fintech, logistics and education teams across the UK, EU and US.
+            {site.role} with {site.years} years of {site.intro}.
           </p>
 
           <p className="anim-fade-up mt-3 flex flex-wrap items-baseline gap-x-2 text-lg text-ink-2 sm:text-xl" style={delay(0.55)}>
@@ -76,6 +76,12 @@ export function Hero({ showContact = true }: HeroProps) {
               </AnimatePresence>
             </span>
           </p>
+
+          {site.note && (
+            <p className="anim-fade-up mt-6 max-w-xl border-l-2 border-moss pl-4 leading-relaxed text-ink-2" style={delay(0.62)}>
+              {site.note}
+            </p>
+          )}
 
           <div className="anim-fade-up mt-10 flex flex-wrap items-center gap-3" style={delay(0.7)}>
             <Magnetic>

@@ -7,6 +7,8 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { education, jobs, site } from "@/data/profile";
 
+const numberWords: Record<number, string> = { 4: "Four", 5: "Five", 6: "Six", 7: "Seven", 8: "Eight" };
+
 export function Experience() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start 0.8", "end 0.55"] });
@@ -20,7 +22,7 @@ export function Experience() {
             <SectionHeading
               index="03"
               eyebrow="Experience"
-              title="Five years, four teams, three time zones."
+              title={`${numberWords[site.years] ?? site.years} years, four teams, three time zones.`}
               description="Remote-first from the start: US, Ukrainian and now EU teams, always in English, always owning features end to end."
             />
           </div>

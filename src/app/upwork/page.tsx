@@ -12,7 +12,7 @@ import { Skills } from "@/components/sections/Skills";
 import { OpenSource } from "@/components/sections/OpenSource";
 import { site } from "@/data/profile";
 
-// Contact-free edition of the home page, linked from the Upwork profile. Upwork does not allow contact
+// Contact-free version of the home page, linked from the Upwork profile. Upwork does not allow contact
 // details on linked sites, so this page has no email, LinkedIn, CV download, contact section or JSON-LD.
 // It is never indexed, so it cannot compete with the main page in search.
 export const metadata: Metadata = {
