@@ -7,11 +7,11 @@ import { GitHubIcon, LinkedInIcon } from "@/components/ui/Icons";
 import { IconLink } from "@/components/ui/IconLink";
 import { Magnetic } from "@/components/ui/Magnetic";
 import { Reveal } from "@/components/ui/Reveal";
-import { site } from "@/data/profile";
-
-const RING_TEXT = "OPEN TO WORK · ALICANTE, SPAIN · REMOTE ACROSS THE EU · RELOCATION · ";
+import { useContent, useUI } from "@/lib/i18n";
 
 export function Contact() {
+  const { site } = useContent();
+  const t = useUI().contact;
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -36,10 +36,10 @@ export function Contact() {
                 <path id="ring" d="M100,100 m-90,0 a90,90 0 1,1 180,0 a90,90 0 1,1 -180,0" />
               </defs>
               <text className="fill-muted font-mono" fontSize="9" letterSpacing="2.4" textLength="565" lengthAdjust="spacing">
-                <textPath href="#ring">{RING_TEXT}</textPath>
+                <textPath href="#ring">{t.ring}</textPath>
               </text>
             </svg>
-            <Image src={site.photo} alt="Portrait of Bohdan Palii" width={460} height={460} className="absolute left-[13%] top-[13%] size-[74%] rounded-full object-cover" />
+            <Image src={site.photo} alt={t.portraitAlt} width={460} height={460} className="absolute left-[13%] top-[13%] size-[74%] rounded-full object-cover" />
           </div>
         </Reveal>
 
@@ -47,12 +47,13 @@ export function Contact() {
           <Reveal>
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
               <span className="text-moss">06</span>
+              <span className="section-total" aria-hidden />
               <span className="mx-2">—</span>
-              Contact
+              {t.eyebrow}
             </p>
-            <h2 className="mt-4 font-display text-[clamp(2.6rem,6.5vw,5.5rem)] leading-[1] tracking-tight text-ink">Let&apos;s build something that ships.</h2>
+            <h2 className="mt-4 font-display text-[clamp(2.6rem,6.5vw,5.5rem)] leading-[1] tracking-tight text-ink">{t.title}</h2>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-2">
-              {site.availability} English C1, Ukrainian native. The fastest way to reach me is email.
+              {site.availability} {t.tail}
             </p>
           </Reveal>
 
@@ -64,11 +65,8 @@ export function Contact() {
             </Magnetic>
             <button type="button" onClick={copy} className="btn btn-ghost" aria-live="polite">
               {copied ? <Check className="size-4 text-moss" /> : <Copy className="size-4" />}
-              {copied ? "Copied" : "Copy email"}
+              {copied ? t.copied : t.copy}
             </button>
-            <a href={site.cvPath} download className="btn btn-ghost">
-              <Download className="size-4" /> CV (PDF)
-            </a>
             <div className="flex items-center gap-2">
               <IconLink href={site.linkedin} label="LinkedIn">
                 <LinkedInIcon />
@@ -77,6 +75,9 @@ export function Contact() {
                 <GitHubIcon />
               </IconLink>
             </div>
+            <a href={site.cvPath} download className="btn-link">
+              <Download className="size-4" /> {t.cv}
+            </a>
           </Reveal>
         </div>
       </div>

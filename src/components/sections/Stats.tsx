@@ -1,8 +1,12 @@
+"use client";
+
 import { CountUp } from "@/components/ui/CountUp";
 import { Reveal } from "@/components/ui/Reveal";
-import { stats } from "@/data/profile";
+import { useContent } from "@/lib/i18n";
 
 export function Stats() {
+  const { stats } = useContent();
+
   return (
     <section aria-label="Key numbers" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
       <dl className="grid grid-cols-2 gap-y-10 lg:grid-cols-4">

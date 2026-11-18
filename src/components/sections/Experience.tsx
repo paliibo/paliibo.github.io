@@ -5,9 +5,11 @@ import { motion, useScroll, useSpring } from "motion/react";
 import { useRef } from "react";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { copy, education, jobs, site } from "@/data/profile";
+import { useContent, useUI } from "@/lib/i18n";
 
 export function Experience() {
+  const { copy, education, jobs, site } = useContent();
+  const t = useUI().experience;
   const ref = useRef<HTMLDivElement>(null);
   // No target when the timeline is hidden, so the hook has nothing unmounted to track.
   const { scrollYProgress } = useScroll(copy.showTimeline ? { target: ref, offset: ["start 0.8", "end 0.55"] } : {});
@@ -20,7 +22,7 @@ export function Experience() {
           <div className="lg:sticky lg:top-32">
             <SectionHeading
               index="03"
-              eyebrow="Experience"
+              eyebrow={t.eyebrow}
               title={copy.experienceTitle}
               description={copy.experienceDescription}
             />
@@ -54,7 +56,7 @@ export function Experience() {
           <div className={copy.showTimeline ? "mt-16 grid gap-4 sm:grid-cols-2" : "grid gap-4 sm:grid-cols-2"}>
             <Reveal className="rounded-3xl border border-line bg-surface p-6">
               <p className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
-                <GraduationCap className="size-4 text-moss" /> Education
+                <GraduationCap className="size-4 text-moss" /> {t.education}
               </p>
               <ul className="mt-4 space-y-4">
                 {education.map((e) => (
@@ -70,7 +72,7 @@ export function Experience() {
             </Reveal>
             <Reveal delay={0.08} className="rounded-3xl border border-line bg-surface p-6">
               <p className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
-                <Languages className="size-4 text-moss" /> Languages
+                <Languages className="size-4 text-moss" /> {t.languages}
               </p>
               <ul className="mt-4 space-y-4">
                 {site.languages.map((l) => (

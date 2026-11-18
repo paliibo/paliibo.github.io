@@ -1,8 +1,12 @@
 "use client";
 
 import { useReducedMotion } from "motion/react";
+import { useMemo } from "react";
 import { heroDiagram } from "@/data/profile";
 import type { DiagramEdge, DiagramNode } from "@/data/variants/types";
+import { useContent, useScrollTo, useUI } from "@/lib/i18n";
+import { projectsUsing } from "@/lib/tech";
+import { setTechFilter } from "@/lib/workBus";
 import { ActivityLog } from "./ActivityLog";
 
 const W = 136;
@@ -33,26 +37,38 @@ const DEFAULT_EDGES: DiagramEdge[] = [
   { id: "sd-db-redis", d: "M212 350 L152 350", dur: 1.6, begin: -0.9 },
 ];
 
-const DEFAULT_ARIA =
-  "Diagram of a typical system Bohdan builds: web and mobile clients call a NestJS API, which writes to PostgreSQL and hands work to a queue; workers call LLM providers and third-party integrations.";
-
 const NODES = heroDiagram?.nodes ?? DEFAULT_NODES;
 const EDGES = heroDiagram?.edges ?? DEFAULT_EDGES;
 
+/** What a node stands for when it is used as a filter: its label and each item of its subtitle. */
+const nodeTechs = (n: DiagramNode) => [n.label, ...n.sub.split(" · ")];
+
 export function SystemDiagram() {
   const reduce = useReducedMotion();
+  const { projects } = useContent();
+  const t = useUI().diagram;
+  const scrollTo = useScrollTo();
+
+  // A node with projects behind it is a filter: it leads to the Work section showing those projects.
+  const used = useMemo(() => new Map(NODES.map((n) => [n.id, projectsUsing(projects, nodeTechs(n)).length])), [projects]);
+  const pick = (n: DiagramNode) => {
+    setTechFilter({ label: n.label, techs: nodeTechs(n) });
+    scrollTo("#work");
+  };
 
   return (
     <div className="rounded-3xl border border-line bg-surface/80 p-4 shadow-card backdrop-blur-sm sm:p-5">
       <div className="flex items-center justify-between gap-4 font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-        <span className="truncate">{heroDiagram?.caption ?? "request → job → result"}</span>
+        <span className="truncate">
+          {heroDiagram?.caption ?? t.caption} <span className="normal-case tracking-normal opacity-70">· {t.hint}</span>
+        </span>
         <span className="inline-flex shrink-0 items-center gap-2">
           <span className="live-dot size-1.5 rounded-full bg-moss" />
-          live
+          {t.live}
         </span>
       </div>
 
-      <svg viewBox="0 0 580 400" className="mt-4 w-full" role="img" aria-label={heroDiagram?.ariaLabel ?? DEFAULT_ARIA}>
+      <svg viewBox="0 0 580 400" className="mt-4 w-full" role="group" aria-label={heroDiagram?.ariaLabel ?? t.aria}>
         <defs>
           <marker id="sd-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
             <path d="M0 0 L10 5 L0 10 z" className="fill-line-strong" />
@@ -79,9 +95,32 @@ export function SystemDiagram() {
             </g>
           ))}
 
-        {NODES.map((n) => (
-          <g key={n.id} transform={`translate(${n.x} ${n.y})`}>
-            <rect width={W} height={H} rx="12" className={n.hot ? "fill-surface stroke-moss" : "fill-surface stroke-line-strong"} strokeWidth={n.hot ? 1.4 : 1} />
+        {NODES.map((n) => {
+          const count = used.get(n.id) ?? 0;
+          const link =
+            count > 0
+              ? {
+                  role: "button",
+                  tabIndex: 0,
+                  "data-diagram-node": "",
+                  onClick: () => pick(n),
+                  onKeyDown: (e: React.KeyboardEvent) => {
+                    if (e.key !== "Enter" && e.key !== " ") return;
+                    e.preventDefault();
+                    pick(n);
+                  },
+                }
+              : {};
+          return (
+          <g key={n.id} transform={`translate(${n.x} ${n.y})`} className={count > 0 ? "group/node cursor-pointer outline-none" : undefined} {...link}>
+            {count > 0 && <title>{t.nodeTitle(n.label, count)}</title>}
+            <rect
+              width={W}
+              height={H}
+              rx="12"
+              className={`fill-surface transition-[stroke] duration-200 group-hover/node:stroke-moss group-focus-visible/node:stroke-moss ${n.hot ? "stroke-moss" : "stroke-line-strong"}`}
+              strokeWidth={n.hot ? 1.4 : 1}
+            />
             {n.hot && (
               <circle cx={W - 14} cy="14" r="3" className="fill-moss">
                 <animate attributeName="opacity" values="1;0.25;1" dur="1.8s" repeatCount="indefinite" />
@@ -94,7 +133,8 @@ export function SystemDiagram() {
               {n.sub}
             </text>
           </g>
-        ))}
+          );
+        })}
       </svg>
 
       <div className="relative mt-3 border-t border-line pt-3">

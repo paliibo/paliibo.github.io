@@ -1,41 +1,71 @@
 "use client";
 
-import { X } from "lucide-react";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { useLenis } from "lenis/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Chip } from "@/components/ui/Chip";
 import type { Project } from "@/data/profile";
+import { useUI } from "@/lib/i18n";
 
 const subscribeNoop = () => () => {};
 
-export function ProjectDialog({ project, onClose }: { project: Project | null; onClose: () => void }) {
+type ProjectDialogProps = {
+  project: Project | null;
+  /** The card the dialog grew out of; it shrinks back there on close. */
+  originId: string | null;
+  /** 1-based place of `project` among the cards the grid shows, and how many there are. */
+  position: number;
+  total: number;
+  /** The case the Next button leads to. */
+  next: Project | null;
+  onStep: (delta: number) => void;
+  onClose: () => void;
+};
+
+export function ProjectDialog({ project, originId, position, total, next, onStep, onClose }: ProjectDialogProps) {
   const lenis = useLenis();
+  const t = useUI().dialog;
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   // true only on the client, without a setState-in-effect
   const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
+  const open = project !== null;
+  const projectId = project?.id;
 
+  // Lock the page and hand focus over while the dialog is open; give both back on close.
   useEffect(() => {
-    if (!project) return;
+    if (!open) return;
     const opener = document.activeElement as HTMLElement | null;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
     lenis?.stop();
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const focusTimer = window.setTimeout(() => closeRef.current?.focus(), 250);
 
     return () => {
-      window.removeEventListener("keydown", onKey);
       window.clearTimeout(focusTimer);
       lenis?.start();
       document.body.style.overflow = prevOverflow;
       opener?.focus?.();
     };
-  }, [project, onClose, lenis]);
+  }, [open, lenis]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowRight") onStep(1);
+      else if (e.key === "ArrowLeft") onStep(-1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose, onStep]);
+
+  // Prev / next swaps the case inside the same panel: start the new one from its top.
+  useEffect(() => {
+    panelRef.current?.scrollTo({ top: 0 });
+  }, [projectId]);
 
   if (!mounted) return null; // portals need document.body: render nothing during SSR
 
@@ -45,7 +75,7 @@ export function ProjectDialog({ project, onClose }: { project: Project | null; o
         <div className="fixed inset-0 z-[60] grid place-items-center p-4 sm:p-8" role="dialog" aria-modal="true" aria-labelledby="project-dialog-title">
           <motion.button
             type="button"
-            aria-label="Close"
+            aria-label={t.close}
             onClick={onClose}
             className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
             initial={{ opacity: 0 }}
@@ -55,12 +85,14 @@ export function ProjectDialog({ project, onClose }: { project: Project | null; o
           />
 
           <motion.div
-            layoutId={`card-${project.id}`}
+            ref={panelRef}
+            layoutId={`card-${originId ?? project.id}`}
             data-lenis-prevent="true"
             transition={{ type: "spring", stiffness: 240, damping: 30 }}
             className="relative max-h-[86vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-line bg-surface shadow-card"
           >
             <motion.div
+              key={project.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1, transition: { delay: 0.15, duration: 0.35 } }}
               exit={{ opacity: 0, transition: { duration: 0.1 } }}
@@ -79,7 +111,7 @@ export function ProjectDialog({ project, onClose }: { project: Project | null; o
                   ref={closeRef}
                   type="button"
                   onClick={onClose}
-                  aria-label="Close"
+                  aria-label={t.close}
                   className="grid size-10 shrink-0 place-items-center rounded-full border border-line text-ink-2 transition-colors hover:border-moss hover:bg-moss-soft hover:text-ink"
                 >
                   <X className="size-4" />
@@ -96,7 +128,7 @@ export function ProjectDialog({ project, onClose }: { project: Project | null; o
               </ul>
 
               <div className="mt-8 border-t border-line pt-6">
-                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">Stack</p>
+                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">{t.stack}</p>
                 <ul className="mt-3 flex flex-wrap gap-1.5">
                   {project.stack.map((s) => (
                     <li key={s}>
@@ -105,6 +137,24 @@ export function ProjectDialog({ project, onClose }: { project: Project | null; o
                   ))}
                 </ul>
               </div>
+
+              {total > 1 && next && (
+                <nav aria-label={t.otherProjects} className="mt-8 flex items-center justify-between gap-4 border-t border-line pt-5">
+                  <button type="button" onClick={() => onStep(-1)} className="btn-link">
+                    <ArrowLeft className="size-4" /> {t.prev}
+                  </button>
+                  <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+                    {String(position).padStart(2, "0")} / {String(total).padStart(2, "0")}
+                  </span>
+                  <button type="button" onClick={() => onStep(1)} className="btn-link min-w-0">
+                    <span className="truncate">
+                      <span className="hidden sm:inline">{t.next} · </span>
+                      {next.name}
+                    </span>
+                    <ArrowRight className="size-4 shrink-0" />
+                  </button>
+                </nav>
+              )}
             </motion.div>
           </motion.div>
         </div>

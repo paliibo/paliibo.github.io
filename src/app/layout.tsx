@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Cantata_One, Catamaran, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { Intro } from "@/components/layout/Intro";
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
 import { site } from "@/data/profile";
 
@@ -75,6 +76,16 @@ export const viewport: Viewport = {
 // Runs before paint so the persisted theme never flashes.
 const themeScript = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme="light"}})();`;
 
+// Page-load intro (components/layout/Intro.tsx): decided before paint, on every load, never under
+// reduced motion.
+// If the bundle never arrives, the timeout releases the held entrance animations at the same moment
+// the CSS bail-out hides the overlay (6 s).
+const introScript = `(function(){try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){var d=document.documentElement.dataset;d.intro="1";setTimeout(function(){if(d.intro)d.introLand="1"},6000)}}catch(e){}})();`;
+
+// One root layout serves both languages, so the static HTML says lang="en"; the Spanish pages
+// (/es) correct it before paint.
+const langScript = `(function(){if(/\\/es(\\.html|\\/)?$/.test(location.pathname)){document.documentElement.lang="es"}})();`;
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
@@ -84,8 +95,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: introScript }} />
+        <script dangerouslySetInnerHTML={{ __html: langScript }} />
       </head>
       <body className="grain flex min-h-full flex-col bg-canvas text-ink">
+        <Intro />
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>

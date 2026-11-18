@@ -13,6 +13,8 @@ export function SectionHeading({ index, eyebrow, title, description, className }
     <Reveal className={className ?? "max-w-3xl"}>
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
         <span className="text-moss">{index}</span>
+        {/* " / 06": how many numbered sections the page has (globals.css, --section-total). */}
+        <span className="section-total" aria-hidden />
         <span className="mx-2">—</span>
         {eyebrow}
       </p>

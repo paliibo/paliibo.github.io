@@ -130,6 +130,31 @@
     background: var(--moss-soft);
     border-color: var(--moss);
   }
+  /* Secondary action as an underlined text link, so it does not compete with the one filled button. */
+  .btn-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0.35rem;
+    font-size: 0.925rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.4em;
+    transition: text-decoration-color 0.3s;
+  }
+  .btn-link:hover {
+    text-decoration-color: var(--moss);
+  }
+
+  /* Section index total ("02 / 06"). A page with fewer numbered sections sets --section-total on <main>. */
+  .section-total::after {
+    content: " / " var(--section-total, "06");
+    white-space: pre;
+  }
 
   .grain::before {
     content: "";
@@ -258,4 +283,96 @@
   .anim-fade-down {
     animation: none;
   }
+}
+
+/* ---------- Page-load intro (components/layout/Intro.tsx) ----------
+   <html data-intro> is set before first paint by a script in layout.tsx. The name fills with ink
+   from the bottom (second line first, so the level rises through both), then Intro.tsx moves it
+   onto the hero heading. Both bail-out animations end the intro without JavaScript. */
+.intro {
+  display: none;
+}
+html[data-intro] .intro {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  animation: intro-bail 0s linear 6s forwards;
+}
+html[data-intro] [data-intro-target] {
+  animation: intro-hide 6s steps(1, end);
+}
+/* The page's entrance animations (fade-up, fade-down) wait, paused on their first frame, behind the
+   overlay, and start when the name begins to land (Intro.tsx sets data-intro-land): the hero then
+   builds up in its usual stagger while the overlay fades away, instead of appearing all at once.
+   The heading's own rise is not held back: it has finished under the overlay, so the landed name
+   hands over to a heading that is already in place. If the bundle never runs, the head
+   script in layout.tsx sets data-intro-land at 6 s, together with the CSS bail-out. */
+html[data-intro]:not([data-intro-land]) .anim-fade-up,
+html[data-intro]:not([data-intro-land]) .anim-fade-down {
+  animation-play-state: paused;
+}
+.intro-name {
+  margin: 0;
+}
+.intro-line {
+  position: relative;
+  display: block;
+  width: max-content;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--ink);
+}
+.intro-line::after {
+  content: attr(data-t);
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: inherit; /* the fill sits exactly on the outlined text, whatever the line's padding */
+  color: var(--ink);
+  -webkit-text-stroke: 0;
+  clip-path: inset(100% 0 0 0);
+  animation: intro-fill 0.5s cubic-bezier(0.3, 0, 0.7, 1) forwards;
+}
+.intro-line:first-child::after {
+  animation-delay: 0.65s;
+  animation-timing-function: cubic-bezier(0.2, 0.6, 0.3, 1);
+}
+.intro-line:last-child::after {
+  animation-delay: 0.15s;
+  animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.5);
+}
+/* Same specificity as the opaque rule above plus the state, or the overlay would stay opaque until
+   it is removed and the page would pop in at once. */
+html[data-intro] .intro[data-state="land"] {
+  background: transparent;
+  transition: background-color 0.7s ease-out;
+}
+.intro[data-state="land"] .intro-name {
+  transition:
+    transform 0.75s var(--ease-out-expo),
+    opacity 0.4s;
+}
+/* The hero's first line is solid with no outline, its second line is outline only. */
+.intro[data-state="land"] .intro-line:first-child {
+  -webkit-text-stroke-color: transparent;
+  transition: -webkit-text-stroke-color 0.5s;
+}
+.intro[data-state="land"] .intro-line:last-child::after {
+  animation: intro-drain 0.6s ease forwards;
+}
+@keyframes intro-fill {
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes intro-drain {
+  from { clip-path: inset(0 0 0 0); }
+  to { clip-path: inset(100% 0 0 0); }
+}
+@keyframes intro-bail {
+  to { visibility: hidden; }
+}
+@keyframes intro-hide {
+  from, to { visibility: hidden; }
 }

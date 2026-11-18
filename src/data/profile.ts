@@ -130,10 +130,17 @@ export interface Project {
   highlights: string[];
   stack: string[];
   tags: ProjectTag[];
+  /** Wide card with highlights next to the summary (unfiltered grid only). */
   featured?: boolean;
+  /** Still being built: marked on the card and left out of the "production systems" count. */
+  inDevelopment?: boolean;
+  /** Mini architecture strip on the wide card: the main stops of the system, in order. */
+  flow?: { label: string; sub: string }[];
 }
 
 const baseProjects: Project[] = [
+  // Order is deliberate (serial position): the flagship and my own product open the grid, the four
+  // wide cards (featured) are spread through it, and a visually strong case closes it.
   {
     id: "motics",
     name: "Motics",
@@ -160,26 +167,47 @@ const baseProjects: Project[] = [
     ],
     tags: ["healthcare", "ai", "mobile"],
     featured: true,
+    flow: [
+      { label: "Clients", sub: "Next.js · Expo" },
+      { label: "Job queue", sub: "Pub/Sub · Tasks" },
+      { label: "Workers", sub: "Cloud Run" },
+      { label: "AI", sub: "speech-to-text · LLM" },
+      { label: "EHR push", sub: "FastAPI service" },
+    ],
   },
   {
-    id: "surge-ai",
-    name: "Agentic coding evaluation",
-    title: "Agentic coding evaluation programme — Surge AI (frontier-lab client under NDA)",
-    tagline: "Evaluating autonomous coding agents",
-    role: "AI Agent Evaluator",
-    country: "Remote",
+    id: "eos",
+    name: "Eos",
+    title: "Eos — Studio Management Platform for Pilates and Barre",
+    tagline: "Studio management platform · my own product",
+    role: "Founder / Full-Stack Developer",
+    country: "Ukraine",
     summary:
-      "Designed engineering tasks against production-grade codebases to capture reproducible failures in an autonomous coding agent, and authored the rubrics an automated LLM grader scores them with.",
+      "My own product, not launched yet: a studio management platform for owner-run Pilates, Barre and group-fitness studios. One pnpm/Turbo monorepo with a NestJS API, a Next.js CRM, an Expo app with Coach and Student modes and a public booking calendar.",
     highlights: [
-      "Built coding RL environments for an SDLC benchmark: realistic engineering tasks against production-grade codebases in Docker sandboxes, designed to elicit and capture reproducible behavioural failures in an autonomous coding agent.",
-      "Authored grader guidance: privileged rubrics consumed by an automated LLM grader, calibrating scoring across seven behavioural dimensions.",
-      "Produced 4+ reference runs per task (gold-standard evaluation traces) to prove failure reproducibility and validate that rubrics discriminate strong from weak agent behaviour.",
-      "Iterated rubrics through regrade cycles, re-scoring frozen agent trajectories to isolate the effect of each rubric change on the score distribution.",
-      "Applied an ~80%-of-senior-engineers consensus bar to separate material failures with real business impact from stylistic preference.",
-      "Contributed agent-evaluation data for RLHF within a large distributed programme; joined recurring client syncs on task design and grading standards.",
+      "Building my own product end to end: product decisions, UX and the full stack, in one TypeScript monorepo (pnpm workspaces, Turbo) with an API, a worker, a browser CRM, a mobile app, a public site and an operator console.",
+      "Public booking calendar on the marketing site: a studio shares a link or a QR code and clients book a class without installing the app or signing in.",
+      "One Expo app with Coach and Student modes for phone and tablet, with an offline mode that keeps showing saved data instead of error banners (TanStack Query persisted to AsyncStorage).",
+      "Pass and credit ledger, waitlists, private lessons and standing bookings on PostgreSQL with Drizzle ORM, with background jobs on graphile-worker.",
+      "Per-studio theming over a single product-branded app binary, so each studio gets its own look without a separate build.",
+      "A demo build of the CRM that runs on an in-memory demo API with invented data, so the product can be shown without a backend.",
+      "Bookkeeping for studio owners: income tracking, a tax estimate and CSV export.",
+      "Audited the app, the CRM and the calendar against five UX laws (Zeigarnik effect, serial position, selective attention, Jakob's law, honest scarcity): seven findings, all seven fixed and merged.",
     ],
-    stack: ["LLM evaluation", "RLHF data generation", "Rubric design", "Docker-based agent sandboxes", "Ruby on Rails", "TypeScript"],
-    tags: ["ai"],
+    stack: [
+      "TypeScript", "NestJS", "Next.js", "React Native (Expo)", "PostgreSQL", "Drizzle ORM", "Fastify", "React", "Tailwind CSS", "shadcn/ui",
+      "Radix UI", "TanStack Query", "Reanimated", "graphile-worker", "better-auth", "Zod", "Postmark", "Sentry", "Turborepo", "pnpm workspaces",
+      "Vitest", "Maestro", "Render",
+    ],
+    tags: ["mobile"],
+    featured: true,
+    inDevelopment: true,
+    flow: [
+      { label: "Clients", sub: "CRM · app · calendar" },
+      { label: "API", sub: "NestJS" },
+      { label: "Ledger", sub: "PostgreSQL · Drizzle" },
+      { label: "Jobs", sub: "graphile-worker" },
+    ],
   },
   {
     id: "homemoney",
@@ -238,25 +266,6 @@ const baseProjects: Project[] = [
     tags: ["healthcare", "ai"],
   },
   {
-    id: "eyevi",
-    name: "EyeVi",
-    title: "EyeVi — LIDAR Mapping System",
-    tagline: "LIDAR mapping system",
-    role: "Full-Stack Developer",
-    country: "Estonia",
-    summary:
-      "3D road-infrastructure mapping: massive LIDAR point clouds rendered in the browser with Three.js and Potree, PostGIS geospatial statistics and Stripe-metered API quotas.",
-    highlights: [
-      "Built a scalable platform for high-accuracy 3D mapping and digital road-infrastructure inventory.",
-      "Engineered a real-time visualisation system for 3D-scanned streets, using Three.js and Potree to render massive LIDAR point clouds directly in the browser.",
-      "Architected a NestJS backend on PostgreSQL with the PostGIS extension to calculate complex geospatial statistics, and integrated ArcGIS for enterprise spatial analytics.",
-      "Engineered a token-based subscription architecture on Stripe to manage automated billing and API usage quotas.",
-      "Implemented high-volume geodata upload workflows with AWS S3 and optimised rendering performance through Redis caching.",
-    ],
-    stack: ["TypeScript", "React", "Three.js", "Potree", "Mapbox", "ArcGIS", "NestJS", "PostgreSQL", "PostGIS", "Redis", "AWS S3", "Stripe", "Docker"],
-    tags: ["geo"],
-  },
-  {
     id: "rozumnyk",
     name: "Rozumnyk",
     title: "Rozumnyk — AI-Powered Agriculture Knowledge Assistant",
@@ -294,6 +303,68 @@ const baseProjects: Project[] = [
     tags: ["fintech"],
   },
   {
+    id: "surge-ai",
+    name: "Agentic coding evaluation",
+    title: "Agentic coding evaluation programme — Surge AI (frontier-lab client under NDA)",
+    tagline: "Evaluating autonomous coding agents",
+    role: "AI Agent Evaluator",
+    country: "Remote",
+    summary:
+      "Designed engineering tasks against production-grade codebases to capture reproducible failures in an autonomous coding agent, and authored the rubrics an automated LLM grader scores them with.",
+    highlights: [
+      "Built coding RL environments for an SDLC benchmark: realistic engineering tasks against production-grade codebases in Docker sandboxes, designed to elicit and capture reproducible behavioural failures in an autonomous coding agent.",
+      "Authored grader guidance: privileged rubrics consumed by an automated LLM grader, calibrating scoring across seven behavioural dimensions.",
+      "Produced 4+ reference runs per task (gold-standard evaluation traces) to prove failure reproducibility and validate that rubrics discriminate strong from weak agent behaviour.",
+      "Iterated rubrics through regrade cycles, re-scoring frozen agent trajectories to isolate the effect of each rubric change on the score distribution.",
+      "Applied an ~80%-of-senior-engineers consensus bar to separate material failures with real business impact from stylistic preference.",
+      "Contributed agent-evaluation data for RLHF within a large distributed programme; joined recurring client syncs on task design and grading standards.",
+    ],
+    stack: ["LLM evaluation", "RLHF data generation", "Rubric design", "Docker-based agent sandboxes", "Ruby on Rails", "TypeScript"],
+    tags: ["ai"],
+    featured: true,
+    flow: [
+      { label: "Task", sub: "real codebase" },
+      { label: "Sandbox", sub: "Docker" },
+      { label: "Agent run", sub: "4+ reference runs" },
+      { label: "LLM grader", sub: "privileged rubric" },
+      { label: "Score", sub: "seven dimensions" },
+    ],
+  },
+  {
+    id: "tender",
+    name: "Tender Service Platform",
+    title: "Tender Service Platform — B2B Procurement and Tendering",
+    tagline: "B2B procurement and tendering platform",
+    role: "Full-Stack Developer",
+    country: "Lithuania",
+    summary:
+      "Multi-tenant B2B procurement and tendering platform, in development from the MVP: 13 Java 21 / Spring Boot 3 services over RabbitMQ RPC, Keycloak identity with a realm per buyer organisation, and a Next.js front end with API types generated from OpenAPI.",
+    highlights: [
+      "Developing a multi-tenant B2B procurement and tendering platform from the MVP: 13 Java 21 / Spring Boot 3 services (two edge gateways, a webhook receiver and ten domain services) that talk over RabbitMQ RPC, with PostgreSQL and Liquibase per service and Keycloak identity with a realm per buyer organisation and a shared supplier realm.",
+      "Designed the platform's shared error contract: one REST response envelope with request IDs, stable error codes carried across RabbitMQ RPC, and gateway error mapping that reports an unreachable service as 503 rather than an authentication failure.",
+      "Implemented internal user management on Keycloak: invitations with configurable windows, activation on first sign-in, role changes behind a last-administrator guard, deactivation and reactivation, administrator-initiated password and MFA resets under Redis-backed user locks, and a Keycloak SMS extension with additional admin endpoints.",
+      "Added a transactional outbox with RabbitMQ publisher confirms, so lifecycle events reach the append-only audit log only once the broker confirms them, and limited the audit log to administrators and auditors.",
+      "Delivered work handover on user deactivation (owned tenders and tasks move atomically, with rollback), supplier self-registration with join requests for duplicate companies, and supplier team management (inviting, resending and cancelling colleagues) across the buyer and supplier gateways.",
+      "Set up the Next.js 16 front end with API types generated from OpenAPI (orval) and Storybook, and generated shared Claude Code and Codex skills from the team's coding rules for AI-assisted development.",
+      "Building the tender lifecycle (draft, publication, bid collection, evaluation, winner selection) with offers, line-item scoring, amount-based approval tiers and contract generation with Dokobit e-signature.",
+      "Building the AI assistant service on the OpenAI API for tender drafting, question answering and advisory winner recommendations, together with OpenSearch k-NN semantic search over platform events and catalogue sync from Microsoft Dynamics 365.",
+    ],
+    stack: [
+      "Java 21", "Spring Boot 3", "RabbitMQ", "Keycloak", "PostgreSQL", "Liquibase", "Redis (Redisson)", "OpenSearch", "Docker", "Next.js",
+      "React", "TypeScript", "Storybook", "OpenAI API", "Dokobit",
+    ],
+    tags: ["ai"],
+    featured: true,
+    inDevelopment: true,
+    flow: [
+      { label: "Identity", sub: "Keycloak realms" },
+      { label: "Gateways", sub: "buyer · supplier" },
+      { label: "RabbitMQ", sub: "RPC · outbox" },
+      { label: "Services", sub: "ten domains" },
+      { label: "Data", sub: "Postgres · OpenSearch" },
+    ],
+  },
+  {
     id: "aspra",
     name: "ASPRA",
     title: "ASPRA — Learning Management System",
@@ -313,22 +384,22 @@ const baseProjects: Project[] = [
     tags: ["education"],
   },
   {
-    id: "saveface",
-    name: "Saveface",
-    title: "Saveface — Face-Value Ticket Exchange",
-    tagline: "Face-value ticket exchange",
-    role: "Full-Stack Mobile Developer",
+    id: "welspot",
+    name: "WelSpot",
+    title: "WelSpot — Medical Management System",
+    tagline: "Medical management system",
+    role: "Full-Stack Developer",
     country: "United States",
     summary:
-      "React Native marketplace for face-value tickets: verified Ticketmaster and AXS transfers, 72-hour payout holds, fraud review and BullMQ auto-purchase queues.",
+      "Appointment scheduling and patient and staff management on React and NestJS, with Socket.IO state sync and Elasticsearch fuzzy search across millions of clinical records.",
     highlights: [
-      "Built a cross-platform mobile application with a scalable backend for face-value ticket exchange, developing the native client in React Native and Expo.",
-      "Engineered a robust, Swagger-documented REST API with NestJS and PostgreSQL via TypeORM to enforce complex marketplace logic, including secure 72-hour payout holds and fraud review workflows.",
-      "Coordinated verified digital ticket transfers through Ticketmaster and AXS.",
-      "Built high-concurrency automated auto-purchase queue systems and general-admission waitlists on Redis and BullMQ, with Stripe payments, Sentry monitoring and Helmet security hardening.",
+      "Engineered a scalable medical management platform on React and NestJS to streamline complex appointment scheduling and patient and staff profile management.",
+      "Enabled real-time application state synchronisation with Socket.IO and RabbitMQ messaging.",
+      "Developed and documented robust REST APIs via Swagger on PostgreSQL and Prisma, and implemented Elasticsearch to deliver rapid fuzzy search across millions of clinical notes and medical records.",
+      "Enforced strict JWT-based role-based access control and compliant document workflows, using AWS S3 for secure medical file storage.",
     ],
-    stack: ["TypeScript", "React Native (Expo)", "NestJS", "Node.js", "PostgreSQL", "TypeORM", "Redis", "BullMQ", "Stripe", "Sentry", "Helmet"],
-    tags: ["mobile"],
+    stack: ["TypeScript", "React", "NestJS", "PostgreSQL", "Prisma", "Redis", "RabbitMQ", "Elasticsearch", "Socket.IO", "AWS S3", "Swagger"],
+    tags: ["healthcare"],
   },
   {
     id: "fast-forward",
@@ -350,22 +421,41 @@ const baseProjects: Project[] = [
     tags: ["geo"],
   },
   {
-    id: "welspot",
-    name: "WelSpot",
-    title: "WelSpot — Medical Management System",
-    tagline: "Medical management system",
-    role: "Full-Stack Developer",
+    id: "saveface",
+    name: "Saveface",
+    title: "Saveface — Face-Value Ticket Exchange",
+    tagline: "Face-value ticket exchange",
+    role: "Full-Stack Mobile Developer",
     country: "United States",
     summary:
-      "Appointment scheduling and patient and staff management on React and NestJS, with Socket.IO state sync and Elasticsearch fuzzy search across millions of clinical records.",
+      "React Native marketplace for face-value tickets: verified Ticketmaster and AXS transfers, 72-hour payout holds, fraud review and BullMQ auto-purchase queues.",
     highlights: [
-      "Engineered a scalable medical management platform on React and NestJS to streamline complex appointment scheduling and patient and staff profile management.",
-      "Enabled real-time application state synchronisation with Socket.IO and RabbitMQ messaging.",
-      "Developed and documented robust REST APIs via Swagger on PostgreSQL and Prisma, and implemented Elasticsearch to deliver rapid fuzzy search across millions of clinical notes and medical records.",
-      "Enforced strict JWT-based role-based access control and compliant document workflows, using AWS S3 for secure medical file storage.",
+      "Built a cross-platform mobile application with a scalable backend for face-value ticket exchange, developing the native client in React Native and Expo.",
+      "Engineered a robust, Swagger-documented REST API with NestJS and PostgreSQL via TypeORM to enforce complex marketplace logic, including secure 72-hour payout holds and fraud review workflows.",
+      "Coordinated verified digital ticket transfers through Ticketmaster and AXS.",
+      "Built high-concurrency automated auto-purchase queue systems and general-admission waitlists on Redis and BullMQ, with Stripe payments, Sentry monitoring and Helmet security hardening.",
     ],
-    stack: ["TypeScript", "React", "NestJS", "PostgreSQL", "Prisma", "Redis", "RabbitMQ", "Elasticsearch", "Socket.IO", "AWS S3", "Swagger"],
-    tags: ["healthcare"],
+    stack: ["TypeScript", "React Native (Expo)", "NestJS", "Node.js", "PostgreSQL", "TypeORM", "Redis", "BullMQ", "Stripe", "Sentry", "Helmet"],
+    tags: ["mobile"],
+  },
+  {
+    id: "eyevi",
+    name: "EyeVi",
+    title: "EyeVi — LIDAR Mapping System",
+    tagline: "LIDAR mapping system",
+    role: "Full-Stack Developer",
+    country: "Estonia",
+    summary:
+      "3D road-infrastructure mapping: massive LIDAR point clouds rendered in the browser with Three.js and Potree, PostGIS geospatial statistics and Stripe-metered API quotas.",
+    highlights: [
+      "Built a scalable platform for high-accuracy 3D mapping and digital road-infrastructure inventory.",
+      "Engineered a real-time visualisation system for 3D-scanned streets, using Three.js and Potree to render massive LIDAR point clouds directly in the browser.",
+      "Architected a NestJS backend on PostgreSQL with the PostGIS extension to calculate complex geospatial statistics, and integrated ArcGIS for enterprise spatial analytics.",
+      "Engineered a token-based subscription architecture on Stripe to manage automated billing and API usage quotas.",
+      "Implemented high-volume geodata upload workflows with AWS S3 and optimised rendering performance through Redis caching.",
+    ],
+    stack: ["TypeScript", "React", "Three.js", "Potree", "Mapbox", "ArcGIS", "NestJS", "PostgreSQL", "PostGIS", "Redis", "AWS S3", "Stripe", "Docker"],
+    tags: ["geo"],
   },
 ];
 
@@ -395,21 +485,22 @@ export interface SkillGroup {
 }
 
 const baseSkills: SkillGroup[] = [
-  { category: "Languages", keywords: ["TypeScript", "JavaScript (ES6+)", "HTML5 / CSS3", "SQL", "Python (FastAPI)", "PHP"] },
+  // Order is deliberate (serial position): the strongest group opens the list, the cloud closes it.
+  {
+    category: "Backend",
+    keywords: ["Node.js", "NestJS", "Express.js", "Fastify", "REST APIs", "OpenAPI / Swagger", "tRPC", "WebSockets (Socket.IO)", "BullMQ", "RabbitMQ", "Google Cloud Pub/Sub", "Cloud Tasks", "JWT authentication", "RBAC", "Multi-tenant architecture", "Event-driven architecture", "Background workers", "Strapi", "WordPress"],
+  },
+  { category: "AI & LLM", keywords: ["OpenAI API", "Anthropic API", "Vercel AI SDK", "RAG pipelines", "Vector search (pgvector)", "Ollama", "Groq API", "Deepgram", "AssemblyAI", "Claude Code", "Codex", "GitHub Copilot", "LLM evaluation", "RLHF data generation", "Agent evaluation", "Rubric design", "Grading calibration", "Failure-mode analysis"] },
   {
     category: "Frontend",
     keywords: ["React", "Next.js (SSR)", "React Router", "Redux", "Redux Saga", "Zustand", "TanStack Query", "RxJS", "Tailwind CSS", "SCSS", "shadcn/ui", "Radix UI", "Material UI", "Chakra UI", "Bootstrap", "Storybook", "Framer Motion", "GSAP", "Three.js / React Three Fiber", "Vite", "Webpack", "PWA", "i18n", "Zod", "Electron.js"],
   },
   { category: "Mobile", keywords: ["React Native", "Expo", "Expo Router", "Push notifications", "App Store and Google Play publishing"] },
-  {
-    category: "Backend",
-    keywords: ["Node.js", "NestJS", "Express.js", "Fastify", "REST APIs", "OpenAPI / Swagger", "tRPC", "WebSockets (Socket.IO)", "BullMQ", "RabbitMQ", "Google Cloud Pub/Sub", "Cloud Tasks", "JWT authentication", "RBAC", "Multi-tenant architecture", "Event-driven architecture", "Background workers", "Strapi", "WordPress"],
-  },
   { category: "Databases & ORMs", keywords: ["PostgreSQL", "PostGIS", "pgvector", "MySQL", "MongoDB", "Redis", "Elasticsearch", "Firebase / Firestore", "Supabase", "Prisma", "TypeORM", "Drizzle ORM", "Sequelize"] },
-  { category: "Cloud & DevOps", keywords: ["AWS (S3, ECS, RDS, CloudFront)", "Google Cloud (Cloud Run, Cloud SQL, Pub/Sub, Cloud Functions)", "Vercel", "Docker", "Kubernetes", "Nginx", "MinIO", "CI/CD", "GitHub Actions", "GitLab CI", "Sentry"] },
-  { category: "AI & LLM", keywords: ["OpenAI API", "Anthropic API", "Vercel AI SDK", "RAG pipelines", "Vector search (pgvector)", "Ollama", "Groq API", "Deepgram", "AssemblyAI", "Claude Code", "Codex", "GitHub Copilot", "LLM evaluation", "RLHF data generation", "Agent evaluation", "Rubric design", "Grading calibration", "Failure-mode analysis"] },
+  { category: "Languages", keywords: ["TypeScript", "JavaScript (ES6+)", "HTML5 / CSS3", "SQL", "Python (FastAPI)", "PHP"] },
   { category: "Payments & Integrations", keywords: ["Stripe", "Paysera", "Cliniko", "Nookal", "Meddbase", "Semble", "Ticketmaster / AXS", "ArcGIS", "Mapbox", "SCORM", "EDI", "Finvalda", "Ivesk.lt"] },
   { category: "Testing & Quality", keywords: ["Jest", "Vitest", "React Testing Library", "Playwright", "Puppeteer", "ESLint", "AES-256 encryption", "Helmet", "GDPR-compliant data handling"] },
+  { category: "Cloud & DevOps", keywords: ["AWS (S3, ECS, RDS, CloudFront)", "Google Cloud (Cloud Run, Cloud SQL, Pub/Sub, Cloud Functions)", "Vercel", "Docker", "Kubernetes", "Nginx", "MinIO", "CI/CD", "GitHub Actions", "GitLab CI", "Sentry"] },
 ];
 
 export interface Repo {
@@ -521,7 +612,7 @@ export const stats = baseStats.map((s) => {
 export const jobs: Job[] = variant.jobs ?? baseJobs;
 
 export const copy = {
-  projectsTitle: `${numberWord(projects.length)} production systems, one stack.`,
+  projectsTitle: `${numberWord(projects.filter((p) => !p.inDevelopment).length)} production systems, one stack.`,
   projectsDescription:
     variant.copy?.projectsDescription ??
     "Multi-tenant SaaS, async pipelines and mobile apps built end to end for teams in the UK, EU and US. Open a card for the full story.",

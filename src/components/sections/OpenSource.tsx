@@ -1,19 +1,24 @@
+"use client";
+
 import { ExternalLink } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/Icons";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { openSource, site } from "@/data/profile";
+import { useContent, useUI } from "@/lib/i18n";
 
 export function OpenSource() {
+  const { openSource, site } = useContent();
+  const t = useUI().openSource;
+
   return (
     <section id="open-source" className="scroll-mt-24 border-t border-line py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
             index="05"
-            eyebrow="Open source"
-            title="Code you can actually read."
-            description="Client work stays private, so these are the public repos: small, complete systems with tests, CI and live demos."
+            eyebrow={t.eyebrow}
+            title={t.title}
+            description={t.description}
           />
           <Reveal delay={0.1}>
             <a href={site.github} target="_blank" rel="noreferrer" className="btn btn-ghost">
@@ -31,11 +36,11 @@ export function OpenSource() {
                 <p className="mt-auto font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{repo.stack}</p>
                 <div className="flex gap-2 border-t border-line pt-4 text-sm">
                   <a href={repo.repo} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-ink-2 transition-colors hover:text-ink">
-                    <GitHubIcon className="size-4" /> Repo
+                    <GitHubIcon className="size-4" /> {t.repo}
                   </a>
                   {repo.live && (
                     <a href={repo.live} target="_blank" rel="noreferrer" className="ml-auto inline-flex items-center gap-1.5 text-moss transition-colors hover:text-ink">
-                      Live demo <ExternalLink className="size-3.5" />
+                      {t.liveDemo} <ExternalLink className="size-3.5" />
                     </a>
                   )}
                 </div>
