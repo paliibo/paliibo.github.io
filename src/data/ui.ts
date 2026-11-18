@@ -47,12 +47,23 @@ const en = {
     full: "too full · digesting",
     newSkin: (n: number) => `${n} bugs · new skin`,
     atePage: "ate the page · digesting",
+    allSeen: (n: number) => `${n} of ${n} · all seen`,
+    woke: "huh?",
   },
   expertise: {
     eyebrow: "What I do",
     title: "One engineer across the whole request path.",
     description:
       "From the screen a clinician taps to the worker that reconciles the invoice at 3 a.m. I own features end to end, so the API, the queue and the UI are designed together.",
+    pathTitle: "one request, start to finish",
+    /** The stops of the request path beside the cards, in order (Expertise.tsx maps each to its cards). */
+    path: [
+      { label: "Clients", sub: "Next.js · Expo" },
+      { label: "API", sub: "NestJS · REST · RBAC" },
+      { label: "Queue", sub: "BullMQ · Pub/Sub" },
+      { label: "Workers", sub: "Cloud Run · integrations" },
+      { label: "LLM", sub: "OpenAI · Anthropic" },
+    ],
   },
   projects: {
     eyebrow: "Selected work",
@@ -65,7 +76,7 @@ const en = {
     clearTech: "Clear filter",
     openCase: (name: string) => `Open the ${name} case`,
   },
-  dialog: { close: "Close", stack: "Stack", prev: "Prev", next: "Next", otherProjects: "Other projects" },
+  dialog: { close: "Close", stack: "Stack", prev: "Prev", next: "Next", otherProjects: "Other projects", demoNote: "Screenshots from the demo build: the studio and the people in them are invented, the interface is in Ukrainian." },
   experience: { eyebrow: "Experience", education: "Education", languages: "Languages" },
   skills: {
     eyebrow: "Stack",
@@ -82,6 +93,7 @@ const en = {
     description: "Client work stays private, so these are the public repos: small, complete systems with tests, CI and live demos.",
     repo: "Repo",
     liveDemo: "Live demo",
+    activity: (commits: number, weeks: number) => `${commits} ${commits === 1 ? "commit" : "commits"} · last ${weeks} weeks`,
   },
   contact: {
     eyebrow: "Contact",
@@ -166,12 +178,22 @@ const es: UIStrings = {
     full: "lleno · haciendo la digestión",
     newSkin: (n) => `${n} bugs · piel nueva`,
     atePage: "se comió la página · digiriendo",
+    allSeen: (n) => `${n} de ${n} · todo visto`,
+    woke: "¿eh?",
   },
   expertise: {
     eyebrow: "Qué hago",
     title: "Un solo ingeniero en todo el recorrido de la petición.",
     description:
       "Desde la pantalla que toca el médico hasta el worker que concilia la factura a las 3 de la madrugada. Me hago cargo de las funcionalidades de principio a fin, así que la API, la cola y la interfaz se diseñan juntas.",
+    pathTitle: "una petición, de principio a fin",
+    path: [
+      { label: "Clientes", sub: "Next.js · Expo" },
+      { label: "API", sub: "NestJS · REST · RBAC" },
+      { label: "Cola", sub: "BullMQ · Pub/Sub" },
+      { label: "Workers", sub: "Cloud Run · integraciones" },
+      { label: "LLM", sub: "OpenAI · Anthropic" },
+    ],
   },
   projects: {
     eyebrow: "Proyectos seleccionados",
@@ -184,7 +206,7 @@ const es: UIStrings = {
     clearTech: "Quitar filtro",
     openCase: (name) => `Abrir el caso ${name}`,
   },
-  dialog: { close: "Cerrar", stack: "Stack", prev: "Anterior", next: "Siguiente", otherProjects: "Otros proyectos" },
+  dialog: { close: "Cerrar", stack: "Stack", prev: "Anterior", next: "Siguiente", otherProjects: "Otros proyectos", demoNote: "Capturas de la versión demo: el estudio y las personas son inventados y la interfaz está en ucraniano." },
   experience: { eyebrow: "Experiencia", education: "Formación", languages: "Idiomas" },
   skills: {
     eyebrow: "Stack",
@@ -201,6 +223,7 @@ const es: UIStrings = {
     description: "El trabajo para clientes es privado, así que estos son los repositorios públicos: sistemas pequeños y completos, con tests, CI y demos en vivo.",
     repo: "Repositorio",
     liveDemo: "Demo en vivo",
+    activity: (commits, weeks) => `${commits} ${commits === 1 ? "commit" : "commits"} · últimas ${weeks} semanas`,
   },
   contact: {
     eyebrow: "Contacto",

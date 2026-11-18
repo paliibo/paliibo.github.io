@@ -12,6 +12,7 @@ import { Skills } from "@/components/sections/Skills";
 import { Stats } from "@/components/sections/Stats";
 import { TechMarquee } from "@/components/sections/TechMarquee";
 import type { Locale } from "@/data/ui";
+import { getRepoActivity } from "@/lib/github";
 import { LocaleProvider } from "@/lib/i18n";
 
 type HomePageProps = {
@@ -21,7 +22,9 @@ type HomePageProps = {
 };
 
 /** The one page of the site, in the given language. The routes (/, /es, /upwork) only choose its options. */
-export function HomePage({ locale = "en", showContact = true }: HomePageProps) {
+export async function HomePage({ locale = "en", showContact = true }: HomePageProps) {
+  // Commit activity of the public repositories, read from GitHub while the site is being built.
+  const activity = await getRepoActivity();
   // The section index shows a total ("02 / 06"); without Contact there are five numbered sections.
   const style = showContact ? undefined : ({ "--section-total": '"05"' } as CSSProperties);
 
@@ -37,7 +40,7 @@ export function HomePage({ locale = "en", showContact = true }: HomePageProps) {
         <Projects />
         <Experience />
         <Skills />
-        <OpenSource />
+        <OpenSource activity={activity} />
         {showContact && <Contact />}
       </main>
       <Footer showContact={showContact} />

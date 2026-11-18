@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 import { addBug, readBugs } from "@/lib/bugs";
+import { BAYER, RAMPS, SKINS, addCrest, animalParts, cap, ell, hex, mix, rgba, rotateHue, shade, type Cell, type Hit, type Part, type Tag } from "@/lib/chameleonModel";
 import { useUI } from "@/lib/i18n";
 
 /**
@@ -16,9 +17,6 @@ import { useUI } from "@/lib/i18n";
  * pointer events, the hero section listens instead.
  */
 
-type Tag = "far" | "leaf" | "bark" | "skin" | "body" | "snout" | "eye";
-type Hit = { h: number; nx: number; ny: number } | null;
-type Cell = { t: number; tag: Tag };
 type Bug = { x: number; y: number; a: number; wob: number; state: "sit" | "fly" | "caught" | "gone"; until: number; tx: number; ty: number; v: number; giveUp: number };
 type Shot = { bug: Bug | null; t0: number; x: number; y: number };
 
@@ -29,53 +27,14 @@ const GW = GX1 - GX0;
 const ANIMAL_COLS = 140; // sprite columns that can hold the animal and its dust
 const FULL_EVERY = 5;
 const SKIN_EVERY = 10;
-// Hue shift of the skin, in degrees from the moss green: green, amber, teal, pink, purple.
-const SKINS = [0, -80, 70, 215, 150];
 const FULL_MS = 4000;
 const ASSEMBLE_MS = 1800;
 const MAX_CELL = 3.5;
 const PERCH_COLS = 135;
 
-const RAMPS = {
-  dark: ["#0e1a12", "#1f3a2a", "#3d6b4c", "#6e9d73", "#9cc39e", "#d5e6d3", "#f2f2ea"],
-  light: ["#1d251f", "#2c382e", "#3f5643", "#5f8163", "#7fa383", "#a5c0a5", "#c4d6c2"],
-};
-const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
 const BUG = ["..b.b..", "ww.b.ww", "wwbbbww", "l.bbb.l", ".lbbbl.", "l.bbb.l", "...b..."];
 
-const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-const mix = (a: number[], b: number[], t: number) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
-const rgba = (c: number[], a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
-
-/** Rotates the hue of an RGB colour (done by hand: canvas filters do not work in Safari). */
-function rotateHue(rgb: number[], deg: number) {
-  const [r, g, b] = rgb.map((v) => v / 255), max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
-  if (!d || !deg) return rgb;
-  const s = d / (1 - Math.abs(2 * l - 1));
-  let h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
-  h = (((h * 60 + deg) % 360) + 360) % 360;
-  const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = l - c / 2;
-  const out = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
-  return out.map((v) => Math.round((v + m) * 255));
-}
-
-function ell(x: number, y: number, cx: number, cy: number, rx: number, ry: number, rot = 0): Hit {
-  const c = Math.cos(rot), s = Math.sin(rot), dx = x - cx, dy = y - cy;
-  const u = (dx * c + dy * s) / rx, v = (-dx * s + dy * c) / ry, d = u * u + v * v;
-  return d >= 1 ? null : { h: Math.sqrt(1 - d), nx: u * c - v * s, ny: u * s + v * c };
-}
-function cap(x: number, y: number, x1: number, y1: number, x2: number, y2: number, r1: number, r2: number): Hit {
-  const vx = x2 - x1, vy = y2 - y1, len2 = vx * vx + vy * vy || 1;
-  const t = Math.max(0, Math.min(1, ((x - x1) * vx + (y - y1) * vy) / len2));
-  const r = r1 + (r2 - r1) * t, dx = x - (x1 + vx * t), dy = y - (y1 + vy * t), d = Math.hypot(dx, dy) / r;
-  return d >= 1 ? null : { h: Math.sqrt(1 - d * d), nx: dx / r, ny: dy / r };
-}
-function tri(x: number, y: number, a: number[], b: number[], c: number[]): Hit {
-  const side = (p: number[], q: number[], r: number[]) => (p[0] - r[0]) * (q[1] - r[1]) - (q[0] - r[0]) * (p[1] - r[1]);
-  const p = [x, y], d1 = side(p, a, b), d2 = side(p, b, c), d3 = side(p, c, a);
-  return (d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0) ? null : { h: 0.75, nx: 0.25, ny: -0.2 };
-}
 
 let model: { cells: (Cell | null)[]; dust: Float32Array } | null = null;
 
@@ -84,33 +43,15 @@ function buildModel() {
   let seed = 11;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
-  const tail: number[][] = [];
-  let prev: number[] | null = null;
-  for (let i = 0; i <= 70; i++) {
-    const s = i / 70, ang = ((-50 - s * 1.6 * 360) * Math.PI) / 180, r = 15 * Math.pow(1 - s, 0.85) + 1.3;
-    const p = [21 + r * Math.cos(ang), 56.5 + r * Math.sin(ang), 4.7 - s * 3.5];
-    if (prev) tail.push([prev[0], prev[1], p[0], p[1], prev[2], p[2]]);
-    prev = p;
-  }
-  // Painted back to front; `flora` parts are the only ones that exist far from the animal.
-  const parts: { tag: Tag; flora?: boolean; fn: (x: number, y: number) => Hit }[] = [
-    { tag: "far", fn: (x, y) => cap(x, y, 82, 51, 87, 60, 3, 2.5) || cap(x, y, 87, 60, 86, 68.5, 2.5, 2.1) },
-    { tag: "far", fn: (x, y) => cap(x, y, 42, 52, 37, 60, 3, 2.5) || cap(x, y, 37, 60, 39, 68.5, 2.5, 2.1) },
+  // Painted back to front; the branch and the leaves (`flora`) are the only parts that exist far
+  // from the animal, and they sit between its far legs and the rest of it.
+  const animal = animalParts("stand");
+  const parts: Part[] = [
+    ...animal.far,
     { tag: "leaf", flora: true, fn: (x, y) => ell(x, y, 0, 53, 6.5, 3, -0.7) || ell(x, y, 113, 64.5, 6, 2.6, 0.5) || ell(x, y, -40, 62, 7, 3, 0.6) },
     { tag: "bark", flora: true, fn: (x, y) => cap(x, y, 118, 72, -262, 68, 2.6, 4.4) || cap(x, y, 9, 70, 2, 57, 1.5, 0.9) || cap(x, y, -36, 69, -39, 64, 1.4, 0.9) },
-    { tag: "skin", fn: (x, y) => { for (const s of tail) { const r = cap(x, y, s[0], s[1], s[2], s[3], s[4], s[5]); if (r) return r; } return null; } },
-    { tag: "skin", fn: (x, y) => cap(x, y, 39, 45, 31.5, 45.2, 7.5, 4.8) },
-    { tag: "body", fn: (x, y) => ell(x, y, 60, 43, 26, 15, -0.05) },
-    { tag: "body", fn: (x, y) => ell(x, y, 58, 37.5, 19, 9.5) },
-    { tag: "skin", fn: (x, y) => ell(x, y, 83, 49, 9, 6.2) },
-    { tag: "skin", fn: (x, y) => tri(x, y, [78, 40], [84.5, 17.5], [101, 36]) },
-    { tag: "skin", fn: (x, y) => ell(x, y, 91.5, 40, 11, 9.2) },
-    { tag: "snout", fn: (x, y) => cap(x, y, 96, 42, 106.5, 44.2, 5.4, 2.4) },
-    { tag: "skin", fn: (x, y) => cap(x, y, 78, 51, 73, 60, 3.3, 2.7) || cap(x, y, 73, 60, 79, 68, 2.7, 2.2) || cap(x, y, 76.5, 69.3, 82, 69.3, 2, 1.8) },
-    { tag: "skin", fn: (x, y) => cap(x, y, 46, 52, 52, 61, 3.4, 2.8) || cap(x, y, 52, 61, 45.5, 68, 2.8, 2.2) || cap(x, y, 43, 69.2, 48.5, 69.2, 2, 1.8) },
-    { tag: "eye", fn: (x, y) => ell(x, y, 94.5, 38.5, 5.2, 5.2) },
+    ...animal.near,
   ];
-  const lv = [0.38, -0.62, 0.68], ln = Math.hypot(lv[0], lv[1], lv[2]), light = lv.map((k) => k / ln);
 
   const cells: (Cell | null)[] = new Array(GW * GH).fill(null);
   for (let j = 0; j < GH; j++) {
@@ -122,31 +63,10 @@ function buildModel() {
         const r = part.fn(x, y);
         if (r) { hit = r; tag = part.tag; }
       }
-      if (!hit) continue;
-      const shade = Math.max(0, hit.nx * light[0] + hit.ny * light[1] + hit.h * light[2]);
-      let t: number;
-      if (tag === "bark") t = 0.05 + 0.24 * shade + (rnd() - 0.5) * 0.08 + (Math.sin(x * 1.7) > 0.6 ? -0.04 : 0);
-      else if (tag === "leaf") t = 0.22 + 0.34 * shade;
-      else if (tag === "far") t = 0.1 + 0.22 * shade;
-      else if (tag === "eye") t = 0.36 + 0.52 * shade - (hit.h < 0.55 ? 0.16 : 0);
-      else {
-        t = 0.2 + 0.62 * shade + 0.045 * Math.sin(x * 0.85 + y * 0.45) + (rnd() - 0.5) * 0.05;
-        if (tag === "body") {
-          if (Math.abs(y - 46.5) < 1.6 && (x + 200) % 7 < 3.2) t += 0.2; // pale flank patches
-          if (Math.sin(x * 0.42 + 1) > 0.72 && y < 44) t -= 0.1; // dark saddle bands
-        }
-        if (tag === "snout" && j === 46 && x > 96) t -= 0.3; // mouth line
-      }
-      cells[j * GW + i] = { t, tag };
+      if (hit) cells[j * GW + i] = { t: shade(hit, tag, x, y, rnd), tag };
     }
   }
-  for (let x = 40; x <= 80; x += 3) { // dorsal crest
-    const i = x - GX0;
-    for (let j = 1; j < GH; j++) {
-      const c = cells[j * GW + i];
-      if (c && c.tag === "body") { if (!cells[(j - 1) * GW + i]) cells[(j - 1) * GW + i] = { t: 0.45, tag: "skin" }; break; }
-    }
-  }
+  addCrest(cells, GW, GH, GX0);
   // Distance to the animal, for the loose pixels floating around it.
   const dust = new Float32Array(GW * GH).fill(99);
   let frontier: number[] = [];
@@ -196,7 +116,18 @@ export function Chameleon({ perchRef, mood }: ChameleonProps) {
     // ---- geometry: everything is in CSS pixels of the hero section ----
     let w = 0, h = 0, dpr = 1, cell = MAX_CELL, ax = 0, ay = 0, perchW = 0, perchH = 0, perchY = 0;
     let dark = false, ramp = RAMPS.light.map(hex), floraRamp = ramp, skin = 0, ink = [0, 0, 0], moss = [0, 0, 0], tongue = [0, 0, 0], pupil = [0, 0, 0];
+    let resizing = false;
     let animal: HTMLCanvasElement | null = null, branch: HTMLCanvasElement | null = null;
+    // A re-bake (new theme, new skin) fades from the old sprites to the new ones instead of swapping.
+    const FADE_MS = 700;
+    let before: { animal: HTMLCanvasElement | null; branch: HTMLCanvasElement | null; t0: number } | null = null;
+    const layer = (now: number, old: HTMLCanvasElement | null | undefined, cur: HTMLCanvasElement, x: number, y: number, w: number, h: number) => {
+      const p = before ? Math.min(1, (now - before.t0) / FADE_MS) : 1;
+      if (old && p < 1) { g!.globalAlpha = 1 - p * 0.5; g!.drawImage(old, x, y, w, h); }
+      g!.globalAlpha = old && p < 1 ? p : 1;
+      g!.drawImage(cur, x, y, w, h);
+      g!.globalAlpha = 1;
+    };
     // Every pixel of the animal, for the entrance: they fly in and assemble it from tail to head.
     let dots: { x: number; y: number; s: number; c: string; a: number; r: number; d: number }[] = [];
 
@@ -246,6 +177,8 @@ export function Chameleon({ perchRef, mood }: ChameleonProps) {
           if (!flora) next.push({ x: Math.round(x * 2) / 2, y: Math.round(y * 2) / 2, s, c: rgba(rgb), a: rnd2() * 6.283, r: 25 + rnd2() * 70, d: ((137 - col) / 138) * 0.5 + rnd2() * 0.18 });
         }
       }
+      // Only a fresh look fades: a resize re-bakes the same colours at another size.
+      before = animal && !calm && !resizing ? { animal, branch, t0: performance.now() } : null;
       animal = ac; branch = bc; dots = next;
     }
 
@@ -261,7 +194,7 @@ export function Chameleon({ perchRef, mood }: ChameleonProps) {
       if (canvas!.width !== Math.round(w * nextDpr) || canvas!.height !== Math.round(h * nextDpr)) {
         canvas!.width = Math.round(w * nextDpr); canvas!.height = Math.round(h * nextDpr);
       }
-      if (nextCell !== cell || nextDpr !== dpr || !animal) { cell = nextCell; dpr = nextDpr; bake(); }
+      if (nextCell !== cell || nextDpr !== dpr || !animal) { cell = nextCell; dpr = nextDpr; resizing = true; bake(); resizing = false; }
       if (bubbleRef.current) { bubbleRef.current.style.left = `${ax + 3 * cell}px`; bubbleRef.current.style.top = `${ay + 8 * cell}px`; }
       // On a narrow column the counter would sit on his back, so it drops under the branch.
       const narrow = perchW < 420;
@@ -388,7 +321,7 @@ export function Chameleon({ perchRef, mood }: ChameleonProps) {
       const tracked = pointer.t > 0;
       const ox = calm || !tracked ? 0 : ((pointer.x - (ax + 60 * cell)) / w) * -7;
       const oy = calm ? 0 : (tracked ? ((pointer.y - (ay + 45 * cell)) / h) * -4 : 0) + Math.sin(now / 900) * 1.2;
-      g!.drawImage(branch, ax + ox * 0.5, ay, GW * cell, GH * cell);
+      layer(now, before?.branch, branch, ax + ox * 0.5, ay, GW * cell, GH * cell);
       for (const b of bugs) stepBug(b, now, dt);
 
       // Tongue: its geometry is settled here, but it is painted after the animal and the eye so it is
@@ -422,7 +355,7 @@ export function Chameleon({ perchRef, mood }: ChameleonProps) {
       // The animal, with a short colour shift after each meal and a queasy tint while digesting.
       const full = now < fullUntil, hue = full ? -70 : 85 * hueSign * Math.exp(-(now - eatT) / 1100);
       if (Math.abs(hue) > 1) g!.filter = `hue-rotate(${hue.toFixed(1)}deg) saturate(1.25)`;
-      g!.drawImage(animal, ax + ox, ay + oy, ANIMAL_COLS * cell, GH * cell);
+      layer(now, before?.animal, animal, ax + ox, ay + oy, ANIMAL_COLS * cell, GH * cell);
       g!.filter = "none";
 
       // Eye: follows the pointer, otherwise the nearest bug.
@@ -469,13 +402,15 @@ export function Chameleon({ perchRef, mood }: ChameleonProps) {
     else introTimer = window.setTimeout(beginAssembly, 700); // let the diagram card fade in first
     const onMove = (e: PointerEvent) => toLocal(e);
     const resize = new ResizeObserver(layout); resize.observe(sec); resize.observe(perch);
-    const theme = new MutationObserver(bake); theme.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    // Camouflage takes a moment: the page changes theme at once, he follows a second later.
+    let themeTimer = 0;
+    const theme = new MutationObserver(() => { window.clearTimeout(themeTimer); themeTimer = window.setTimeout(bake, calm ? 0 : 1000); }); theme.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     const seen = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop())); seen.observe(sec);
     sec.addEventListener("pointermove", onMove, { passive: true });
     sec.addEventListener("click", onClick, true);
     return () => {
       stop(); resize.disconnect(); theme.disconnect(); seen.disconnect(); window.clearTimeout(sayTimer);
-      window.clearTimeout(introTimer); window.removeEventListener("intro:done", beginAssembly);
+      window.clearTimeout(introTimer); window.clearTimeout(themeTimer); window.removeEventListener("intro:done", beginAssembly);
       sec.removeEventListener("pointermove", onMove); sec.removeEventListener("click", onClick, true);
     };
   }, [perchRef, mood, t]);

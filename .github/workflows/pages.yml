@@ -57,6 +57,8 @@ jobs:
           NEXT_PUBLIC_INDEXABLE: ${{ vars.INDEXABLE }}
           # Content variant (src/data/variant.ts), e.g. the repo variable VARIANT=healthcare.
           NEXT_PUBLIC_VARIANT: ${{ vars.VARIANT }}
+          # Read-only: lifts the GitHub API rate limit for the commit-activity graphs (src/lib/github.ts).
+          GITHUB_TOKEN: ${{ github.token }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

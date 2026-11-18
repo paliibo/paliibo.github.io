@@ -16,6 +16,7 @@
   --accent: #333f34;
   --accent-fg: #f5f5ef;
   --moss: #5f8163;
+  --bark: #5b4a3a;
   --moss-soft: rgba(95, 129, 99, 0.14);
   --glow: rgba(95, 129, 99, 0.35);
   --selection: rgba(51, 63, 52, 0.18);
@@ -35,6 +36,7 @@
   --accent: #f2f2ea;
   --accent-fg: #0b0f0c;
   --moss: #9cc39e;
+  --bark: #7a6753;
   --moss-soft: rgba(156, 195, 158, 0.12);
   --glow: rgba(156, 195, 158, 0.22);
   --selection: rgba(156, 195, 158, 0.28);
@@ -245,7 +247,39 @@
   100% { transform: scaleY(0); transform-origin: bottom; }
 }
 
+/* ---------- The chameleon outside the hero ---------- */
+@keyframes zzz {
+  0%, 100% { opacity: 0.2; transform: translateY(3px); }
+  50% { opacity: 1; transform: translateY(-3px); }
+}
+.zzz {
+  animation: zzz 2.6s ease-in-out infinite;
+}
+/* A burst of pixels: each <i> flies to its own --x / --y and fades. */
+@keyframes pixel-pop {
+  from { opacity: 1; transform: translate(0, 0); }
+  to { opacity: 0; transform: translate(var(--x), var(--y)); }
+}
+.pixel-burst i {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: var(--moss);
+  opacity: 0;
+  animation: pixel-pop 1.3s ease-out forwards;
+}
+@keyframes hop {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-7px); }
+}
+.hop {
+  animation: hop 0.5s ease-out 3;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .zzz,
+  .hop,
+  .pixel-burst i,
   .marquee-track,
   .edge-flow,
   .live-dot,

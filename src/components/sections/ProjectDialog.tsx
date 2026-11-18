@@ -3,9 +3,11 @@
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { useLenis } from "lenis/react";
 import { AnimatePresence, motion } from "motion/react";
+import Image from "next/image";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Chip } from "@/components/ui/Chip";
+import { MiniFlow } from "@/components/ui/MiniFlow";
 import type { Project } from "@/data/profile";
 import { useUI } from "@/lib/i18n";
 
@@ -117,6 +119,22 @@ export function ProjectDialog({ project, originId, position, total, next, onStep
                   <X className="size-4" />
                 </button>
               </div>
+
+              {/* What the product looks like, before what it does. */}
+              {project.media && (
+                <figure className="mt-8">
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {project.media.map((m) => (
+                      <a key={m.src} href={m.src} target="_blank" rel="noreferrer" className="shrink-0">
+                        <Image src={m.src} alt={m.alt} width={m.width} height={m.height} className="h-44 w-auto rounded-xl border border-line-strong sm:h-56" />
+                        <span className="mt-1.5 block font-mono text-[10px] uppercase tracking-[0.14em] text-muted">{m.caption}</span>
+                      </a>
+                    ))}
+                  </div>
+                  <figcaption className="mt-2 text-xs leading-relaxed text-muted">{t.demoNote}</figcaption>
+                </figure>
+              )}
+              {project.flow && <MiniFlow steps={project.flow} className="mt-8 hidden sm:flex" />}
 
               <ul className="mt-8 space-y-4">
                 {project.highlights.map((h) => (

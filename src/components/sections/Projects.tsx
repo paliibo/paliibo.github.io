@@ -2,8 +2,10 @@
 
 import { ArrowUpRight, Check, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Chip } from "@/components/ui/Chip";
+import { MiniChameleon } from "@/components/ui/MiniChameleon";
+import { MiniFlow } from "@/components/ui/MiniFlow";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import type { Project, ProjectTag } from "@/data/profile";
 import type { UIStrings } from "@/data/ui";
@@ -16,27 +18,11 @@ import { ProjectDialog } from "./ProjectDialog";
 
 type Filter = ProjectTag | "all";
 
-/** The main stops of the system as a strip of boxes joined by the same moving dashes as the hero diagram. */
-function MiniFlow({ steps }: { steps: NonNullable<Project["flow"]> }) {
-  return (
-    <ol className="hidden items-stretch lg:flex">
-      {steps.map((step, i) => (
-        <li key={step.label} className="flex min-w-0 flex-1 items-center">
-          {i > 0 && (
-            <svg viewBox="0 0 22 8" width="22" height="8" className="shrink-0 self-center" aria-hidden>
-              <path d="M1 4 H20" fill="none" strokeWidth="1.2" className="edge-flow stroke-line-strong" />
-              <path d="M16.5 1 L20.5 4 L16.5 7" fill="none" strokeWidth="1.2" className="stroke-line-strong" />
-            </svg>
-          )}
-          <div className="min-w-0 flex-1 rounded-xl border border-line bg-canvas/40 px-3 py-2">
-            <p className="truncate text-[13px] font-semibold leading-5 text-ink">{step.label}</p>
-            <p className="font-mono text-[10px] leading-[1.35] text-muted">{step.sub}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
-}
+// Where each pixel of the "all seen" burst flies: up and outwards from the chameleon.
+const BURST = Array.from({ length: 26 }, (_, i) => {
+  const angle = Math.PI + ((i * 0.618) % 1) * Math.PI, far = 40 + ((i * 37) % 70);
+  return { x: Math.round(Math.cos(angle) * far), y: Math.round(Math.sin(angle) * far + 28), tongue: i % 4 === 0 };
+});
 
 type CardProps = {
   project: Project;
@@ -118,7 +104,7 @@ function ProjectCard({ project, featured, alignEnd, viewed, t, onOpen }: CardPro
         )}
       </div>
 
-      {featured && project.flow && <MiniFlow steps={project.flow} />}
+      {featured && project.flow && <MiniFlow steps={project.flow} className="hidden lg:flex" />}
 
       <ul className="mt-auto flex flex-wrap gap-1.5">
         {visibleStack.map((s) => (
@@ -164,12 +150,25 @@ export function Projects() {
   const activeIndex = list.findIndex((p) => p.id === activeId);
   const active = activeIndex === -1 ? null : list[activeIndex];
   const viewedCount = projects.filter((p) => viewed.has(p.id)).length;
+  const allSeen = viewedCount === projects.length;
+  // Counts up each time the last unseen case is opened: the chameleon by the counter celebrates.
+  const [cheer, setCheer] = useState(0);
+  const see = useCallback(
+    (id: string) => {
+      if (!viewed.has(id) && viewedCount === projects.length - 1) setCheer((n) => n + 1);
+      markProjectViewed(id);
+    },
+    [viewed, viewedCount, projects.length],
+  );
 
-  const open = useCallback((id: string) => {
-    setOriginId(id);
-    setActiveId(id);
-    markProjectViewed(id);
-  }, []);
+  const open = useCallback(
+    (id: string) => {
+      setOriginId(id);
+      setActiveId(id);
+      see(id);
+    },
+    [see],
+  );
   const close = useCallback(() => setActiveId(null), []);
   /** Prev / next inside the dialog, through the cards the current filter shows, wrapping at the ends. */
   const step = useCallback(
@@ -177,9 +176,9 @@ export function Projects() {
       if (activeIndex === -1) return;
       const next = list[(activeIndex + delta + list.length) % list.length];
       setActiveId(next.id);
-      markProjectViewed(next.id);
+      see(next.id);
     },
-    [activeIndex, list],
+    [activeIndex, list, see],
   );
   const pickFilter = (id: Filter) => {
     setTechFilter(null);
@@ -243,14 +242,32 @@ export function Projects() {
             )}
           </div>
 
-          <p className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted" aria-live="polite">
-            <span>{t.viewed(viewedCount, projects.length)}</span>
-            {viewedCount > 0 && (
-              <button type="button" onClick={clearViewedProjects} className="uppercase tracking-[0.16em] underline decoration-line-strong underline-offset-4 transition-colors hover:text-ink">
-                {t.reset}
-              </button>
-            )}
-          </p>
+          <div className="flex items-end gap-3">
+            <p className="flex items-center gap-3 pb-1 font-mono text-[11px] uppercase tracking-[0.16em] text-muted" aria-live="polite">
+              <span>{t.viewed(viewedCount, projects.length)}</span>
+              {viewedCount > 0 && (
+                <button type="button" onClick={clearViewedProjects} className="uppercase tracking-[0.16em] underline decoration-line-strong underline-offset-4 transition-colors hover:text-ink">
+                  {t.reset}
+                </button>
+              )}
+            </p>
+            {/* The chameleon waits by the counter and celebrates when the last case has been opened. */}
+            <div aria-hidden className="relative w-[72px] shrink-0">
+              <MiniChameleon key={cheer} eye={allSeen ? "happy" : "open"} look={[-0.9, 0.3]} className={cn("w-full", cheer > 0 && allSeen && "hop")} />
+              {allSeen && (
+                <span className="absolute -top-7 right-2 whitespace-nowrap rounded-[9px] border border-line-strong bg-surface px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ink">
+                  {ui.chameleon.allSeen(projects.length)}
+                </span>
+              )}
+              {cheer > 0 && allSeen && (
+                <span key={cheer} className="pixel-burst absolute left-3 top-4 size-0">
+                  {BURST.map((b, i) => (
+                    <i key={i} style={{ "--x": `${b.x}px`, "--y": `${b.y}px`, background: b.tongue ? "#c8705f" : undefined } as CSSProperties} />
+                  ))}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         <motion.div layout className="mt-10 grid grid-flow-dense gap-5 sm:grid-cols-2 lg:grid-cols-3">

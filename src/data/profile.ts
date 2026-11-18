@@ -52,11 +52,21 @@ const baseHeroPhrases = [
   "payment and EHR integrations",
 ];
 
-const baseStats = [
-  { value: 5, suffix: "", label: "years of experience" },
-  { value: 12, suffix: "", label: "production projects" },
-  { value: 9, suffix: "", label: "countries served" },
-  { value: 25, suffix: "+", label: "third-party integrations" },
+export type StatKey = "years" | "projects" | "countries" | "integrations";
+
+// `key` names the stat for the code (two of them open a list, see Stats.tsx); `label` is the text.
+const baseStats: { key: StatKey; value: number; suffix: string; label: string }[] = [
+  { key: "years", value: 5, suffix: "", label: "years of experience" },
+  { key: "projects", value: 12, suffix: "", label: "production projects" },
+  { key: "countries", value: 9, suffix: "", label: "countries served" },
+  { key: "integrations", value: 25, suffix: "+", label: "third-party integrations" },
+];
+
+/** Third-party services named in the project write-ups below: what "25+ integrations" stands for. */
+export const integrations = [
+  "Stripe", "Paysera", "Cliniko", "Nookal", "Meddbase", "Semble", "Splose", "Dentally", "Healthcode", "Gmail", "Microsoft 365", "Twilio",
+  "Vald", "Deepgram", "AssemblyAI", "OpenAI", "Anthropic", "Groq", "Ticketmaster", "AXS", "ArcGIS", "Mapbox", "Dokobit",
+  "Microsoft Dynamics 365", "Finvalda", "Ivesk.lt", "Rekvizitai.lt",
 ];
 
 export type ExpertiseIcon = "server" | "workflow" | "layout" | "smartphone" | "sparkles" | "creditcard";
@@ -136,6 +146,8 @@ export interface Project {
   inDevelopment?: boolean;
   /** Mini architecture strip on the wide card: the main stops of the system, in order. */
   flow?: { label: string; sub: string }[];
+  /** Screenshots shown at the top of the project's dialog, with their pixel size. */
+  media?: { src: string; alt: string; caption: string; width: number; height: number }[];
 }
 
 const baseProjects: Project[] = [
@@ -207,6 +219,12 @@ const baseProjects: Project[] = [
       { label: "API", sub: "NestJS" },
       { label: "Ledger", sub: "PostgreSQL · Drizzle" },
       { label: "Jobs", sub: "graphile-worker" },
+    ],
+    // From the product's demo build and dev fixtures: invented studio, invented people.
+    media: [
+      { src: asset("/projects/eos/crm-today.jpg"), alt: "Eos CRM, the Today screen: four group classes with attendance and a studio setup progress row", caption: "CRM · Today", width: 800, height: 446 },
+      { src: asset("/projects/eos/student-schedule.jpg"), alt: "Eos mobile app in Student mode: the day's schedule with booking status on each class", caption: "App · Student", width: 630, height: 1368 },
+      { src: asset("/projects/eos/booking-calendar.jpg"), alt: "Eos public booking calendar on the marketing site, shown in a phone frame", caption: "Public booking calendar", width: 800, height: 500 },
     ],
   },
   {
@@ -465,13 +483,15 @@ export interface Job {
   start: string;
   end: string;
   location: string;
+  /** Ids of the projects shipped at this job, shown under it in the timeline. */
+  projects?: string[];
 }
 
 const baseJobs: Job[] = [
-  { company: "UAPP LLC", role: "Full-Stack Developer", start: "Sep 2025", end: "Present", location: "Remote · Wilmington, Delaware, USA" },
-  { company: "CubeX", role: "Full-Stack Developer", start: "Jul 2024", end: "Sep 2025", location: "Remote · Zaporizhzhia, Ukraine" },
-  { company: "ACCA", role: "Full-Stack Developer", start: "Oct 2023", end: "Jul 2024", location: "Hybrid · Fairfax, Virginia, USA" },
-  { company: "WelSpot Inc.", role: "Full-Stack Developer", start: "Sep 2022", end: "Oct 2023", location: "Remote · Miami, Florida, USA" },
+  { company: "UAPP LLC", role: "Full-Stack Developer", start: "Sep 2025", end: "Present", location: "Remote · Wilmington, Delaware, USA", projects: ["motics", "inkasso", "rozumnyk", "tender"] },
+  { company: "CubeX", role: "Full-Stack Developer", start: "Jul 2024", end: "Sep 2025", location: "Remote · Zaporizhzhia, Ukraine", projects: ["homemoney", "longevity", "eyevi", "aspra"] },
+  { company: "ACCA", role: "Full-Stack Developer", start: "Oct 2023", end: "Jul 2024", location: "Hybrid · Fairfax, Virginia, USA", projects: ["fast-forward", "saveface", "baulera"] },
+  { company: "WelSpot Inc.", role: "Full-Stack Developer", start: "Sep 2022", end: "Oct 2023", location: "Remote · Miami, Florida, USA", projects: ["welspot"] },
 ];
 
 export const education = [
@@ -551,6 +571,12 @@ export const openSource: Repo[] = [
     description: "Self-hostable video hub on one ts-rest contract: an Nx monorepo with an Express API and a Next.js 15 app, tested end to end against a real database.",
     stack: "Nx · Express · Next.js 15 · Prisma · PostgreSQL · Jest",
     repo: "https://github.com/paliibo/nx-vi-hub",
+  },
+  {
+    name: "autoreel",
+    description: "Turns a folder of raw footage into a finished 20-minute reel: local transcription, an LLM that picks the best moments, and timelines for Premiere Pro and DaVinci Resolve.",
+    stack: "Python · faster-whisper · ffmpeg · Typer · Anthropic · Ollama",
+    repo: "https://github.com/paliibo/autoreel",
   },
 ];
 

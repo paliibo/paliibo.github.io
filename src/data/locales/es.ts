@@ -435,7 +435,7 @@ const educationTextById: Record<string, { degree: string; location: string } | u
 
 const education = en.education.map((e) => ({ ...e, ...educationTextById[e.institution] }));
 
-type RepoName = "leadscope" | "dunlin" | "mark-map" | "data-room" | "quizbrain" | "nx-vi-hub";
+type RepoName = "leadscope" | "dunlin" | "mark-map" | "data-room" | "quizbrain" | "nx-vi-hub" | "autoreel";
 
 const repoDescriptions: Record<RepoName, string> = {
   leadscope:
@@ -450,6 +450,8 @@ const repoDescriptions: Record<RepoName, string> = {
     "App de estudio offline-first: cuestionarios, flashcards con repetición espaciada SM-2 y un juego de emparejar.",
   "nx-vi-hub":
     "Hub de vídeo autoalojable sobre un único contrato ts-rest: un monorepo Nx con una API Express y una app Next.js 15, probado de extremo a extremo contra una base de datos real.",
+  autoreel:
+    "Convierte una carpeta de grabaciones en bruto en un reel de 20 minutos: transcripción local, un LLM que elige los mejores momentos y líneas de tiempo para Premiere Pro y DaVinci Resolve.",
 };
 
 const repoDescriptionById: Record<string, string | undefined> = repoDescriptions;
